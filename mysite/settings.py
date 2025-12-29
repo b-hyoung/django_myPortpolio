@@ -43,7 +43,7 @@ INSTALLED_APPS = [
     'projects',
     'crispy_forms',
     'crispy_bootstrap5',
-    'ai_search',
+    'taggit',
 ]
 
 MIDDLEWARE = [

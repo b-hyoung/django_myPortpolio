@@ -1,0 +1,105 @@
+{% extends "blog/notes_base.html" %}
+{% load static %}
+{% load crispy_forms_tags %}
+
+{% block title %}Create New Note{% endblock %}
+
+{% block content %}
+<style>
+/* Style the form container to look like a large Post-it note */
+.create-note-container {
+    background-color: #fff9c4; /* Post-it yellow */
+    color: #333;
+    padding: 2.5rem;
+    padding-top: 3.5rem; /* Make room for the tape */
+    width: 100%;
+    max-width: 900px; /* Limit max width for readability */
+    margin: 3rem auto; /* Center the form */
+    box-shadow: 10px 10px 20px rgba(0,0,0,0.3);
+    border-bottom-left-radius: 15px 5px;
+    border-bottom-right-radius: 5px 15px;
+    transform: rotate(0.5deg); /* Slight rotation */
+    position: relative;
+}
+
+/* Simulate a piece of tape at the top */
+.create-note-container::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%) rotate(2deg); /* Center and slight rotation */
+    width: 120px;
+    height: 30px;
+    background: rgba(180, 180, 180, 0.4); /* Semi-transparent gray tape */
+    border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+    border-radius: 2px;
+    z-index: 2; /* Above the note content */
+}
+
+.create-note-container h1 {
+    color: #5d4037;
+    font-weight: bold;
+    font-family: 'Kalam', cursive;
+    border-bottom: 2px solid rgba(0,0,0,0.1);
+    padding-bottom: 1rem;
+    margin-bottom: 1.5rem;
+    font-size: 2.5rem;
+}
+
+/* Adjust crispy forms field labels/help texts for post-it theme */
+.create-note-container label {
+    color: #5d4037; /* Darker label color */
+    font-weight: bold;
+    font-size: 1.1rem;
+    margin-bottom: 0.5rem;
+    font-family: 'Kalam', cursive;
+}
+
+.create-note-container .form-control {
+    background-color: rgba(255, 255, 255, 0.9); /* Opaque white for input */
+    border: 1px solid rgba(0,0,0,0.15);
+    color: #333;
+    font-size: 1rem;
+}
+.create-note-container .form-control::placeholder {
+    color: #888;
+}
+
+.create-note-container .btn-primary {
+    background-color: #5d4037; /* Dark brown save button */
+    border-color: #5d4037;
+}
+.create-note-container .btn-primary:hover {
+    background-color: #795548;
+    border-color: #795548;
+}
+
+.create-note-container .btn-outline-secondary {
+    color: #5d4037;
+    border-color: #5d4037;
+}
+.create-note-container .btn-outline-secondary:hover {
+    background-color: #5d4037;
+    color: white;
+}
+</style>
+
+<!-- Google Font for Post-it -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Kalam:wght@400;700&display=swap" rel="stylesheet">
+
+<div class="create-note-container">
+    <h1 class="text-center">새 노트 작성</h1>
+    <form method="post">
+        {% csrf_token %}
+        {{ form|crispy }}
+        <div class="text-end mt-4">
+            <button type="submit" class="btn btn-primary btn-lg">노트 저장</button>
+            <a href="{% url 'notes:notes_index' %}" class="btn btn-outline-secondary btn-lg ms-2">취소</a>
+        </div>
+    </form>
+</div>
+
+{% endblock %}

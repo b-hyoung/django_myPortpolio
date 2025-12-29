@@ -1,26 +1,434 @@
-{% extends "blog/base.html" %}
-{% block title %}Notes - My Blog{% endblock %}
+{% extends "blog/notes_base.html" %}
+{% load crispy_forms_tags %}
+
+{% block title %}Notes - My Idea Board{% endblock %}
 
 {% block content %}
-<h1 class="h3 mb-3">Notes</h1>
+<style>
+/* Post-it Note Styles */
+.note-grid {
+    column-count: 1;
+    column-gap: 1.5rem;
+}
 
-<div class="mb-3">
-    <a class="btn btn-outline-success btn-sm" href="/admin/notes/note/add/">
-        <i class="bi bi-plus-circle"></i> 새 노트 작성
-    </a>
+@media (min-width: 576px) { .note-grid { column-count: 2; } }
+@media (min-width: 768px) { .note-grid { column-count: 3; } }
+@media (min-width: 1200px) { .note-grid { column-count: 4; } }
+@media (min-width: 1400px) { .note-grid { column-count: 5; } }
+
+.post-it-note {
+    background-color: #fff9c4;
+    color: #333;
+    padding: 1.5rem;
+    padding-top: 2rem; /* Make room for the tape */
+    margin-bottom: 1.5rem;
+    box-shadow: 0px 8px 15px rgba(0,0,0,0.2), 0px 3px 6px rgba(0,0,0,0.15); /* More realistic shadow */
+    border-bottom-left-radius: 10px 4px;
+    border-bottom-right-radius: 4px 10px;
+    break-inside: avoid; /* Prevent notes from breaking across columns */
+    position: relative;
+    top: 0; /* For random vertical offset */
+    left: 0; /* For random horizontal offset */
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    transform-origin: bottom center; /* Make it lift from the bottom */
+}
+
+/* Simulate a piece of tape at the top */
+.post-it-note::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%) rotate(-5deg); /* Center and slight rotation */
+    width: 80px;
+    height: 20px;
+    background: rgba(180, 180, 180, 0.4); /* Semi-transparent gray tape */
+    border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+    border-radius: 2px;
+    z-index: 2; /* Above the note content */
+}
+
+.post-it-note:hover {
+    transform: scale(1.05) translateY(-8px) rotate(var(--hover-rotation, 0deg)) !important; /* Lift and slightly enlarge on hover */
+    box-shadow: 0px 15px 30px rgba(0, 0, 0, 0.4), 0px 6px 12px rgba(0, 0, 0, 0.25); /* Stronger hover shadow */
+    z-index: 10; /* Bring to front on hover */
+}
+
+
+.post-it-note h2 {
+    color: #5d4037; /* A brown color for title */
+    margin-bottom: 0.5rem;
+    font-weight: bold;
+    font-family: 'Kalam', cursive; /* Optional: handwritten font */
+}
+
+.post-it-note p {
+    color: #555;
+    font-size: 0.95rem;
+    line-height: 1.5;
+}
+
+.post-it-note .note-meta {
+    font-size: 0.8rem;
+    color: #888;
+    margin-top: 1rem;
+    text-align: right;
+}
+
+/* Pop-up Overlay Styles */
+#note-popup-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.7); /* Semi-transparent black background */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1060; /* Higher than navbar and other elements */
+    opacity: 0; /* Start invisible for animation */
+    visibility: hidden; /* Hidden for accessibility */
+    transition: opacity 0.3s ease;
+}
+
+#note-popup {
+    background-color: #fff9c4; /* Post-it yellow */
+    color: #333;
+    padding: 2.5rem;
+    width: 90%;
+    max-width: 700px;
+    box-shadow: 15px 15px 30px rgba(0, 0, 0, 0.5); /* Larger shadow */
+    border-bottom-left-radius: 15px 5px;
+    border-bottom-right-radius: 5px 15px;
+    transform: scale(0.7) rotate(1deg); /* Start smaller and slightly rotated */
+    transition: transform 0.3s ease;
+    position: relative;
+}
+
+#note-popup-overlay.show {
+    opacity: 1;
+    visibility: visible;
+}
+
+#note-popup-overlay.show #note-popup {
+    transform: scale(1) rotate(-1deg); /* Grow to full size and slightly rotated */
+}
+
+.note-popup-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 2px solid rgba(0,0,0,0.1);
+    padding-bottom: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.note-popup-header h2 {
+    color: #5d4037;
+    font-weight: bold;
+    font-family: 'Kalam', cursive;
+    margin-bottom: 0; /* Override default h2 margin */
+    font-size: 1.8rem;
+}
+
+.note-popup-close {
+    background: none;
+    border: none;
+    font-size: 2rem;
+    line-height: 1;
+    color: #555;
+    cursor: pointer;
+}
+
+.note-popup-content {
+    color: #444;
+    font-size: 1.1rem;
+    line-height: 1.8;
+    white-space: pre-wrap; /* Preserve formatting for notes */
+}
+
+.note-popup-meta {
+    font-size: 0.9rem;
+    color: #888;
+    margin-top: 1.5rem;
+    text-align: right;
+}
+
+/* Modal for creating new notes */
+#createNoteModal .modal-content {
+    background-color: #fff9c4; /* Post-it yellow */
+    color: #333;
+    padding: 2rem;
+    box-shadow: 15px 15px 30px rgba(0, 0, 0, 0.5); /* Larger shadow */
+    border-bottom-left-radius: 15px 5px;
+    border-bottom-right-radius: 5px 15px;
+    transform: rotate(-0.5deg); /* Slight rotation */
+    position: relative;
+}
+
+#createNoteModal .modal-header {
+    border-bottom: 2px solid rgba(0,0,0,0.1);
+    padding-bottom: 1rem;
+    margin-bottom: 1.5rem;
+    font-family: 'Kalam', cursive;
+    color: #5d4037;
+    font-weight: bold;
+}
+
+#createNoteModal .modal-header .btn-close {
+    filter: invert(30%); /* Make close button visible on light background */
+}
+
+#createNoteModal label {
+    color: #5d4037; /* Darker label color */
+    font-weight: bold;
+    font-size: 1.1rem;
+    margin-bottom: 0.5rem;
+}
+
+#createNoteModal .form-control {
+    background-color: rgba(255, 255, 255, 0.7); /* Slightly transparent white for input */
+    border: 1px solid rgba(0,0,0,0.1);
+    color: #333;
+}
+#createNoteModal .form-control::placeholder {
+    color: #888;
+}
+</style>
+
+<!-- Google Font for Post-it -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Kalam:wght@400;700&display=swap" rel="stylesheet">
+
+
+<div class="text-center">
+    <h1 class="h3 mb-3">{% if tag_name %}Notes Tagged: {{ tag_name }}{% else %}My Idea Board{% endif %}</h1>
+    <p class="lead text-body-secondary mb-3">개발자의 머릿속에 떠다니는 영감의 조각들. 정제되지 않은 날 것의 아이디어를 시각화합니다.</p>
 </div>
 
-{% for note in notes %}
-<div class="card mb-3 shadow-sm">
-<div class="card-body">
-<h2 class="h5">
-    <a href="{% url 'note_detail' note.id %}" class="text-decoration-none text-white">{{ note.title }}</a>
-</h2>
-<p class="text-muted small mb-2">{{ note.created_at }}</p>
-<p class="mb-0">{{ note.content|linebreaks }}</p>
+<div class="d-flex justify-content-center mb-4">
+    <form action="{% url 'notes:notes_index' %}" method="get" class="col-md-6"> {# col-md-6으로 너비 제한 #}
+        <div class="input-group">
+            <input type="text" name="q" class="form-control" placeholder="태그 또는 제목으로 검색" value="{{ tag_name|default_if_none:'' }}">
+            <button class="btn btn-outline-secondary" type="submit">검색</button>
+            <a href="{% url 'notes:notes_index' %}" class="btn btn-outline-danger">초기화</a>
+        </div>
+    </form>
 </div>
+
+<div class="card mb-4">
+    <div class="card-header fw-bold">
+        <i class="bi bi-tags"></i> 태그 카테고리
+    </div>
+    <div class="card-body">
+        <div class="d-flex flex-wrap gap-2">
+            <a href="{% url 'notes:notes_index' %}" class="badge bg-secondary text-decoration-none">모두 보기</a> {# All 태그 추가 #}
+            {% if all_tags %}
+                {% for tag in all_tags %}
+                    <a href="{% url 'notes:notes_index' %}?tag={{ tag.name }}" class="badge bg-primary text-decoration-none">{{ tag.name }} ({{ tag.num_times }})</a>
+                {% endfor %}
+            {% else %}
+                <p class="text-body-secondary mb-0">아직 태그가 없습니다.</p>
+            {% endif %}
+        </div>
+    </div>
 </div>
-{% empty %}
-<div class="alert alert-info">아직 노트가 없어요. 위 버튼을 눌러 새 노트를 작성해보세요!</div>
-{% endfor %}
+
+<div class="text-end mb-4">
+    <button class="btn btn-outline-success btn-sm" data-bs-toggle="modal" data-bs-target="#createNoteModal">
+        <i class="bi bi-plus-circle"></i> 메모 추가하기
+    </button>
+</div>
+
+{% if notes %} {# Check if notes exist #} 
+    <div class="note-grid">
+        {% for note in notes %}
+        <a href="#" class="text-decoration-none text-reset note-trigger" data-note-id="{{ note.id }}">
+            <div class="post-it-note"
+                 data-color="{{ note.random_color }}"
+                 data-rotation="{{ note.random_rotation }}"
+                 data-offset-x="{{ note.random_offset_x }}"
+                 data-offset-y="{{ note.random_offset_y }}">
+                <h2>{{ note.title }}</h2>
+                <p>{{ note.content|truncatewords:30|linebreaks }}</p>
+                <div class="note-tags mt-2 mb-2">
+                    {% for tag in note.tags.all %}
+                        <a href="{% url 'notes:notes_index' %}?tag={{ tag.name }}" class="badge bg-info text-dark text-decoration-none me-1">{{ tag.name }}</a>
+                    {% endfor %}
+                </div>
+                <div class="note-meta">
+                    {{ note.created_at|date:"Y.m.d" }}
+                </div>
+            </div>
+        </a>
+        {% endfor %}
+    </div>
+{% else %}
+    <div class="text-center py-5">
+        <div style="max-width: 600px; margin: 0 auto;">
+            <p class="lead text-body-secondary mb-0">아직 노트가 없어요. <br>위 버튼을 눌러 새 노트를 작성해보세요!</p>
+        </div>
+    </div>
+{% endif %}
+
+<!-- Note Pop-up Overlay HTML (for viewing notes) -->
+<div id="note-popup-overlay">
+    <div id="note-popup">
+        <div class="note-popup-header">
+            <h2 id="popup-note-title"></h2>
+            <button class="note-popup-close">&times;</button>
+        </div>
+        <div id="popup-note-content" class="note-popup-content"></div>
+        <div id="popup-note-meta" class="note-popup-meta"></div>
+    </div>
+</div>
+
+<!-- Create Note Modal -->
+<div class="modal fade" id="createNoteModal" tabindex="-1" aria-labelledby="createNoteModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="createNoteModalLabel">새 노트 작성</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="createNoteForm" method="post" action="{% url 'notes:create_note' %}">
+                    {% csrf_token %}
+                    {{ form.title|as_crispy_field }}
+                    {{ form.content|as_crispy_field }}
+                    <div class="mb-3">
+                        <label for="id_tags" class="form-label">태그</label>
+                        <input type="text" name="tags" class="form-control" id="id_tags" placeholder="태그를 쉼표로 구분하여 입력하세요 (예: Python, Django)">
+                        <div class="form-text">쉼표(,)로 구분하여 여러 태그를 입력할 수 있습니다.</div>
+                    </div>
+                    <div class="text-end mt-4">
+                        <button type="button" class="btn btn-outline-secondary btn-lg me-2" data-bs-dismiss="modal">취소</button>
+                        <button type="submit" class="btn btn-primary btn-lg">노트 저장</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const notes = document.querySelectorAll('.post-it-note');
+    // const colors = ['#fff9c4', '#c4e6ff', '#d6ffc4', '#ffd6ed']; // Post-it colors (이제 뷰에서 설정하므로 필요 없음)
+
+    notes.forEach(note => {
+        const rotation = note.dataset.rotation;
+        const color = note.dataset.color;
+        const offsetX = note.dataset.offsetX;
+        const offsetY = note.dataset.offsetY;
+
+        note.style.transform = `rotate(${rotation}deg)`;
+        note.style.backgroundColor = color;
+        note.style.top = `${offsetY}px`;
+        note.style.left = `${offsetX}px`;
+    });
+
+    // Pop-up logic
+    const noteTriggers = document.querySelectorAll('.note-trigger');
+    const notePopupOverlay = document.getElementById('note-popup-overlay');
+    const notePopup = document.getElementById('note-popup');
+    const popupNoteTitle = document.getElementById('popup-note-title');
+    const popupNoteContent = document.getElementById('popup-note-content');
+    const popupNoteMeta = document.getElementById('popup-note-meta');
+    const popupCloseButton = document.querySelector('.note-popup-close');
+
+    noteTriggers.forEach(trigger => {
+        trigger.addEventListener('click', function(e) {
+            e.preventDefault(); // Prevent default link behavior
+            const noteId = this.dataset.noteId;
+            const clickedNote = this.querySelector('.post-it-note'); // 클릭된 노트 요소
+            
+            let noteColor = '#fff9c4'; // 기본 Post-it yellow (fallback)
+            if (clickedNote && clickedNote.dataset.color) { // null 체크 및 data-color 존재 여부 확인
+                noteColor = clickedNote.dataset.color;
+            }
+
+            const url = `/notes/api/notes/${noteId}/`; // Our API endpoint
+
+            // Fetch note content via AJAX
+            fetch(url)
+                .then(response => response.json())
+                .then(data => {
+                    popupNoteTitle.textContent = data.title;
+                    popupNoteContent.innerHTML = data.content.replace(/\n/g, '<br>'); // Preserve line breaks
+                    popupNoteMeta.textContent = data.created_at;
+
+                    notePopup.style.backgroundColor = noteColor; // 팝업창 배경색 설정
+                    notePopupOverlay.classList.add('show'); // Show the pop-up
+                })
+                .catch(error => {
+                    console.error('Error fetching note content:', error);
+                    alert('노트 내용을 불러오는데 실패했습니다.');
+                });
+        });
+    });
+
+    notePopupOverlay.addEventListener('click', function(e) {
+        if (e.target === notePopupOverlay) {
+            notePopupOverlay.classList.remove('show');
+        }
+    });
+
+    popupCloseButton.addEventListener('click', function() {
+        notePopupOverlay.classList.remove('show');
+    });
+
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            notePopupOverlay.classList.remove('show');
+        }
+    });
+
+    // AJAX for Create Note Form
+    const createNoteForm = document.getElementById('createNoteForm');
+    if (createNoteForm) {
+        createNoteForm.addEventListener('submit', function(e) {
+            e.preventDefault(); // Prevent default form submission
+
+            const formData = new FormData(this);
+            const url = this.action;
+            const csrfToken = formData.get('csrfmiddlewaretoken');
+
+            fetch(url, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': csrfToken, // Important for Django POST requests
+                },
+                body: formData,
+            })
+            .then(response => {
+                if (!response.ok) {
+                    return response.json().then(errorData => {
+                        throw new Error(errorData.message || '폼 제출에 실패했습니다.');
+                    });
+                }
+                return response.json();
+            })
+            .then(data => {
+                alert(data.message); // Show success message
+                const createNoteModal = bootstrap.Modal.getInstance(document.getElementById('createNoteModal'));
+                if (createNoteModal) {
+                    createNoteModal.hide(); // Close the modal
+                }
+                location.reload(); // Reload page to show new note and clear form
+            })
+            .catch(error => {
+                console.error('Error submitting form:', error);
+                alert('노트 저장 중 오류가 발생했습니다: ' + error.message);
+                // Optionally, display form errors in the modal
+            });
+        });
+    }
+});
+</script>
 {% endblock %}

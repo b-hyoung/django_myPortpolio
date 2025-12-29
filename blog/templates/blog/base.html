@@ -32,11 +32,18 @@
     }
     
     body {
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
       font-size: 1.1rem;
       line-height: 1.7; /* Increase line height for better readability */
       background: #1a1a1a;
       background-image: radial-gradient(circle at 15% 25%, rgba(45, 212, 191, 0.07), transparent 40%), 
                         radial-gradient(circle at 85% 75%, rgba(192, 132, 252, 0.07), transparent 40%);
+    }
+
+    main {
+        flex: 1; /* Make main content grow to fill space */
     }
 
     a {
@@ -142,7 +149,7 @@
           <a class="nav-link {% if request.path|startswith:projects_url %}active{% endif %}" href="{{ projects_url }}"><i class="bi bi-kanban"></i> Projects</a>
         </li>
         
-        {% url 'notes_index' as notes_url %}
+        {% url 'notes:notes_index' as notes_url %}
         <li class="nav-item">
           <a class="nav-link {% if request.path|startswith:notes_url %}active{% endif %}" href="{{ notes_url }}"><i class="bi bi-journal"></i> Notes</a>
         </li>
@@ -151,13 +158,6 @@
         <li class="nav-item">
           <a class="nav-link {% if request.path == contact_url %}active{% endif %}" href="{{ contact_url }}"><i class="bi bi-chat-dots"></i> Contact</a>
         </li>
-        
-        {% url 'ai_search:search' as ai_search_url %}
-        <li class="nav-item">
-          <a class="nav-link {% if request.path == ai_search_url %}active{% endif %}" href="{{ ai_search_url }}"><i class="bi bi-robot"></i> AI Search</a>
-        </li>
-        
-
       </ul>
 
       <!-- Right-aligned search and admin -->

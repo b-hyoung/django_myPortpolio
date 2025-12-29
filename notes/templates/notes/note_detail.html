@@ -1,20 +1,69 @@
-{% extends "blog/base.html" %}
+{% extends "blog/notes_base.html" %}
+{% load static %}
 
-{% block title %}{{ note.title }} - Notes{% endblock %}
+{% block title %}{{ note.title }} - My Idea Board{% endblock %}
 
 {% block content %}
-<div class="card shadow-sm">
-    <div class="card-body">
-        <h1 class="card-title h3 mb-3 text-white">{{ note.title }}</h1>
-        <p class="text-muted small mb-4">
-            <i class="bi bi-clock"></i> 작성일: {{ note.created_at|date:"Y-m-d H:i" }}
-        </p>
-        
-        <div class="mb-4" style="white-space: pre-wrap;">{{ note.content|linebreaksbr }}</div>
+<style>
+.post-it-large-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 70vh;
+}
+.post-it-large {
+    background-color: #fff9c4;
+    color: #333;
+    padding: 2.5rem;
+    width: 100%;
+    max-width: 700px; /* Limit max width for readability */
+    box-shadow: 10px 10px 20px rgba(0,0,0,0.3);
+    border-bottom-left-radius: 15px 5px;
+    border-bottom-right-radius: 5px 15px;
+    transform: rotate(-1deg); /* A slight, fixed rotation */
+}
+.post-it-large h1 {
+    color: #5d4037;
+    font-weight: bold;
+    font-family: 'Kalam', cursive;
+    border-bottom: 2px solid rgba(0,0,0,0.1);
+    padding-bottom: 1rem;
+    margin-bottom: 1.5rem;
+}
+.post-it-large .note-content {
+    color: #444;
+    font-size: 1.1rem;
+    line-height: 1.8;
+}
+.post-it-large .note-meta {
+    font-size: 0.85rem;
+    color: #888;
+    margin-top: 2rem;
+    text-align: right;
+}
+</style>
 
-        <a href="{% url 'notes_index' %}" class="btn btn-outline-secondary">
-            <i class="bi bi-list-ul"></i> 목록으로 돌아가기
-        </a>
+<!-- Google Font for Post-it -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Kalam:wght@400;700&display=swap" rel="stylesheet">
+
+
+<div class="post-it-large-container">
+    <div class="post-it-large">
+        <h1>{{ note.title }}</h1>
+        <div class="note-content">
+            {{ note.content|linebreaks }}
+        </div>
+        <div class="note-meta">
+            {{ note.created_at|date:"%Y.%m.%d" }}
+        </div>
     </div>
+</div>
+
+<div class="text-center mt-5">
+    <a href="{% url 'notes_index' %}" class="btn btn-outline-info">
+        <i class="bi bi-arrow-left-circle"></i> Back to Idea Board
+    </a>
 </div>
 {% endblock %}
