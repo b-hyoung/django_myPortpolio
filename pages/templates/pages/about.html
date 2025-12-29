@@ -1,0 +1,156 @@
+{% extends "blog/base.html" %}
+{% load static %}
+
+{% block title %}About - B-hyoung{% endblock %}
+
+{% block content %}
+<style>
+/* ... existing timeline styles ... */
+.timeline {
+    position: relative;
+    padding: 2rem 0;
+}
+.timeline::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 18px;
+    height: 100%;
+    width: 4px;
+    background: var(--bs-border-color);
+    border-radius: 2px;
+}
+.timeline-item {
+    position: relative;
+    margin-bottom: 2rem;
+    padding-left: 40px;
+}
+.timeline-item::before {
+    content: '';
+    position: absolute;
+    top: 8px;
+    left: 10px;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: var(--laser-color-2);
+    border: 3px solid var(--bs-body-bg);
+}
+.timeline-item:hover::before {
+    background: var(--laser-color-1);
+}
+.timeline-date {
+    font-size: 0.85em;
+    font-weight: bold;
+    color: var(--laser-color-1);
+}
+
+/* Custom outline badges for skills */
+.badge-outline-laser-1 {
+    color: var(--laser-color-1);
+    border: 1px solid var(--laser-color-1);
+}
+.badge-outline-laser-2 {
+    color: var(--laser-color-2);
+    border: 1px solid var(--laser-color-2);
+}
+
+/* Divider for stacked skill categories */
+.skill-category {
+    padding-bottom: 1.5rem;
+    border-bottom: 1px solid var(--bs-border-color);
+}
+.col-md-4:last-child .skill-category {
+    border-bottom: none; /* Remove border from the last item */
+}
+
+@media (min-width: 768px) {
+  .skill-category {
+    border-bottom: none;
+    padding-bottom: 0;
+  }
+}
+</style>
+
+<!-- 1. Profile & Intro -->
+<div class="row align-items-center g-5 mb-5">
+    <div class="col-lg-4 text-center">
+        <img src="{% static 'blog/images/image.png' %}" class="img-fluid rounded-circle shadow-lg" alt="Profile Picture" style="max-width: 250px; border: 2px solid var(--laser-color-1);">
+    </div>
+    <div class="col-lg-8">
+        <h1 class="display-5 fw-bold text-info">...</h1>
+        <p class="lead text-body-secondary">
+            단순한 구현을 넘어 본질적인 문제 해결에 집중하며, 코드를 통해 사용자에게 더 나은 경험을 제공합니다. <br>이 블로그는 저의 성장 과정과 고민을 기록하는 공간입니다.
+        </p>
+    </div>
+</div>
+
+<!-- 2. Skills -->
+<div class="mb-5">
+    <h2 class="h3 mb-4 text-center">Skills & Expertise</h2>
+    <div class="card p-4">
+        <div class="row g-4">
+            <div class="col-md-4 skill-category">
+                <h5 class="text-info"><i class="bi bi-code-slash"></i> Languages</h5>
+                <p style="display: flex; flex-wrap: wrap; gap: 10px;">
+                    <span class="badge fs-6 badge-outline-laser-1">Python</span>
+                    <span class="badge fs-6 badge-outline-laser-1">Java Spring</span>
+                </p>
+            </div>
+            <div class="col-md-4 skill-category">
+                <h5 class="text-info"><i class="bi bi-layers-fill"></i> Frameworks</h5>
+                <p style="display: flex; flex-wrap: wrap; gap: 10px;">
+                    <span class="badge fs-6 badge-outline-laser-2">Django</span>
+                    <span class="badge fs-6 badge-outline-laser-2">React</span>
+                    <span class="badge fs-6 badge-outline-laser-2">Bootstrap</span>
+                </p>
+            </div>
+            <div class="col-md-4 skill-category">
+                <h5 class="text-info"><i class="bi bi-server"></i> Tools & Infra</h5>
+                <p style="display: flex; flex-wrap: wrap; gap: 10px;">
+                    <span class="badge fs-6 badge-outline-laser-1">Docker</span>
+                    <span class="badge fs-6 badge-outline-laser-1">Git & GitHub</span>
+                    <span class="badge fs-6 badge-outline-laser-1">PostgreSQL</span>
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ... rest of the template ... -->
+<div class="mb-5">
+    <h2 class="h3 mb-4 text-center">My Journey</h2>
+    <div class="timeline">
+        <!-- Timeline Item 1 -->
+        <div class="timeline-item">
+            <div class="timeline-date">202X년</div>
+            <h5 class="text-info">첫 코딩 입문</h5>
+            <p class="text-body-secondary">이곳에 자신의 개발 여정의 시작에 대한 스토리를 작성하세요. 어떤 계기로 개발에 입문하게 되었나요?</p>
+        </div>
+        <!-- Timeline Item 2 -->
+        <div class="timeline-item">
+            <div class="timeline-date">202X년</div>
+            <h5 class="text-info">첫 프로젝트 경험</h5>
+            <p class="text-body-secondary">처음으로 의미있는 프로젝트를 진행했던 경험을 공유해보세요. 무엇을 만들었고, 무엇을 배웠나요?</p>
+        </div>
+        <!-- Timeline Item 3 -->
+        <div class="timeline-item">
+            <div class="timeline-date">현재</div>
+            <h5 class="text-info">미래를 향한 현재의 나</h5>
+            <p class="text-body-secondary">현재 어떤 기술에 집중하고 있고, 앞으로 어떤 개발자로 성장하고 싶은지 목표를 작성해보세요.</p>
+        </div>
+    </div>
+</div>
+
+<!-- 4. Call to Action -->
+<div class="text-center">
+    <h3 class="h4 mb-3">함께 하고 싶으시다면,</h3>
+        <a href="{% url 'project_list' %}" class="btn btn-primary btn-lg">
+            <i class="bi bi-kanban"></i> 내 프로젝트 보기
+        </a>
+        <a href="{% url 'pages:contact' %}" class="btn btn-outline-info btn-lg">
+            <i class="bi bi-envelope-fill"></i> 연락하기
+        </a>
+</div>
+
+{% endblock %}

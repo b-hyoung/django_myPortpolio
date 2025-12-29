@@ -1,0 +1,61 @@
+{% extends "blog/base.html" %}
+{% block title %}Contact - 나만의 블로그{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-lg-12">
+
+        <h1 class="h3 mb-4 text-center text-info">Let's Connect!</h1> {# More engaging header #}
+
+        <div class="card p-4"> {# Keep existing card styling #}
+            <div class="card-body">
+                <p class="text-body-secondary mb-4 text-center lead">
+                    블로그에 대한 문의, 피드백, 협업 제안 등 편하게 연락 주세요!
+                </p>
+
+                <div class="d-grid gap-3"> {# Grid for contact items #}
+
+                    {# Email Item #}
+                    <a href="mailto:youqlrqod@gmail.com" class="text-decoration-none text-reset">
+                        <div class="contact-item card hover-lift p-3 d-flex flex-row align-items-center"> {# Use card styling for items #}
+                            <i class="bi bi-envelope-fill fs-3 text-primary me-3"></i> {# Themed icon #}
+                            <div>
+                                <h5 class="mb-0 text-info">Email</h5>
+                                <p class="mb-0 text-body-secondary small">youqlrqod@gmail.com</p>
+                            </div>
+                        </div>
+                    </a>
+
+                    {# GitHub Item #}
+                    <a href="https://github.com/b-hyoung" target="_blank" class="text-decoration-none text-reset">
+                        <div class="contact-item card hover-lift p-3 d-flex flex-row align-items-center">
+                            <i class="bi bi-github fs-3 text-secondary me-3"></i> {# Themed icon #}
+                            <div>
+                                <h5 class="mb-0 text-info">GitHub</h5>
+                                <p class="mb-0 text-body-secondary small">https://github.com/b-hyoung</p>
+                            </div>
+                        </div>
+                    </a>
+
+                    {# Instagram Item (Optional) #}
+                    <a href="https://instagram.com/w2go_uiseong" target="_blank" class="text-decoration-none text-reset">
+                        <div class="contact-item card hover-lift p-3 d-flex flex-row align-items-center">
+                            <i class="bi bi-instagram fs-3 text-warning me-3"></i> {# Themed icon #}
+                            <div>
+                                <h5 class="mb-0 text-info">Instagram</h5>
+                                <p class="mb-0 text-body-secondary small">https://instagram.com/w2go_uiseong</p>
+                            </div>
+                        </div>
+                    </a>
+
+                </div> {# End d-grid #}
+
+                <div class="mt-4 text-center"> {# Centered home button #}
+                    <a class="btn btn-outline-info btn-sm" href="{% url 'post_list' %}">← Home</a>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+{% endblock %}

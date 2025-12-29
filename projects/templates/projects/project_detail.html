@@ -1,0 +1,45 @@
+{% extends "blog/base.html" %}
+{% load static %}
+
+{% block title %}{{ project.title }} - Projects{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-lg-12">
+        <div class="card p-4">
+            {% if project.image %}
+            <img src="{{ project.image.url }}" class="img-fluid rounded mb-4" alt="{{ project.title }}">
+            {% endif %}
+            
+            <h1 class="h2 text-info mb-3">{{ project.title }}</h1>
+            
+            <div class="mb-4">
+                <p class="text-body-secondary">{{ project.description }}</p>
+            </div>
+
+            <div class="mb-4">
+                <h5 class="mb-3">Technologies Used</h5>
+                {% for tech in project.technologies.split %}
+                    <span class="badge" style="background-color: var(--laser-color-1); color: #000;">{{ tech }}</span>
+                {% endfor %}
+            </div>
+
+            <div class="d-flex gap-2">
+                {% if project.live_link %}
+                <a href="{{ project.live_link }}" class="btn btn-primary" target="_blank">
+                    <i class="bi bi-box-arrow-up-right"></i> Live Demo
+                </a>
+                {% endif %}
+                {% if project.source_link %}
+                <a href="{{ project.source_link }}" class="btn btn-outline-secondary" target="_blank">
+                    <i class="bi bi-github"></i> Source Code
+                </a>
+                {% endif %}
+                <a href="{% url 'project_list' %}" class="btn btn-outline-info ms-auto">
+                    Back to Projects
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

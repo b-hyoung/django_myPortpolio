@@ -1,0 +1,32 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.pyc
+*.pyd
+*.pyo
+*.egg-info/
+.eggs/
+
+# Environments
+.env
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# Editors
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Django specific
+*.sqlite3
+media/ # User-uploaded files will go here
+static/ # Collected static files go here (if not source static)
+my_project/ # A common naming convention if user creates a separate sub-project for deployment. Not applicable here.

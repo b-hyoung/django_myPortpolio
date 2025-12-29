@@ -1,0 +1,135 @@
+/* --- 기본 & Quartz 테마 맞춤 스타일 --- */
+:root {
+    /* Quartz 테마의 색상에 맞춘 변수 */
+    --primary-text-color: #dbe0e8; /* 밝은 텍스트 색상 */
+    --secondary-text-color: #9fadc6; /* 약간 어두운 텍스트 색상 */
+    --background-color: #1a1a2e; /* Quartz 테마의 기본 배경색 */
+    --card-background: #232946; /* 카드 배경색 */
+    --border-color: #3e446c; /* 테두리 및 구분선 색상 */
+    --accent-color: #eebbc3; /* Quartz 테마의 악센트 색상 (분홍 계열) */
+    --hover-color: #f3d9df; /* 악센트 색상의 호버 효과 */
+    --font-family: 'Noto Sans KR', sans-serif;
+}
+
+/* base.html의 body 태그와 스타일 일치 */
+body {
+    font-family: var(--font-family);
+    line-height: 1.6;
+    color: var(--primary-text-color);
+    background-color: var(--background-color);
+    margin: 0;
+    padding: 0;
+}
+
+.container {
+    max-width: 960px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+h1 {
+    text-align: center;
+    color: var(--primary-text-color);
+    margin-bottom: 40px;
+    font-size: 2.5em;
+    font-weight: 700;
+}
+
+h2 {
+    font-size: 1.8em;
+    margin-bottom: 10px;
+}
+
+h2 a {
+    color: var(--primary-text-color);
+    text-decoration: none;
+    transition: color 0.3s ease;
+}
+
+h2 a:hover {
+    color: var(--accent-color);
+}
+
+/* --- 포스트 목록 그리드 --- */
+.post-list-grid {
+    display: grid;
+    grid-template-columns: 1fr; /* 1열 레이아웃으로 변경 */
+    gap: 30px;
+}
+
+/* --- 포스트 카드 스타일 --- */
+.post-card {
+    background-color: var(--card-background);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 30px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    display: flex;
+    flex-direction: column;
+}
+
+.post-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 25px rgba(238, 187, 195, 0.15); /* 악센트 색상으로 그림자 효과 */
+}
+
+.post-meta {
+    font-size: 0.9em;
+    color: var(--secondary-text-color);
+    margin-bottom: 15px;
+}
+
+.post-date {
+    font-weight: 500;
+}
+
+.post-excerpt {
+    color: var(--secondary-text-color);
+    margin-bottom: 20px;
+    flex-grow: 1;
+}
+
+.read-more {
+    display: inline-block;
+    color: var(--accent-color);
+    text-decoration: none;
+    font-weight: 500;
+    transition: color 0.3s ease;
+}
+
+.read-more:hover {
+    color: var(--hover-color);
+}
+
+
+/* --- 스르륵 애니메이션 --- */
+.post-card {
+    opacity: 0;
+    transform: translateY(30px);
+    transition: opacity 0.6s ease-out, transform 0.6s ease-out;
+}
+
+.post-card.visible {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+/* 각 카드별로 지연 시간 부여 */
+.post-card:nth-child(even).visible {
+    transition-delay: 0.1s;
+}
+.post-card:nth-child(3n).visible {
+    transition-delay: 0.2s;
+}
+
+
+/* --- 반응형 디자인 --- */
+@media (max-width: 768px) {
+    h1 {
+        font-size: 2em;
+    }
+    h2 {
+        font-size: 1.5em;
+    }
+}
