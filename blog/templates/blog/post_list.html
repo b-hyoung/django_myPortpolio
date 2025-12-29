@@ -17,4 +17,45 @@
 {% empty %}
 <div class="alert alert-info">아직 글이 없어요. /admin에서 글을 작성해보자!</div>
 {% endfor %}
+
+<!-- Recent Hacker News Section -->
+<div class="mt-5">
+    <h2 class="h3 mb-3">최근 Hacker News</h2>
+    
+    <!-- News Item 1 -->
+    <div class="card mb-3">
+        <div class="card-body">
+            <h5 class="card-title text-info">처리되지 않은 사진은 어떤 모습일까</h5>
+            <p class="card-text text-body-secondary small">카메라 센서의 원시(raw) 데이터가 어떻게 우리가 보는 이미지로 변환되는지 설명합니다. 센서 데이터, 히스토그램, 색상을 위한 베이어 매트릭스(Bayer matrix), 디모자이킹(demosaicing), 그리고 밝기와 화이트 밸런스를 조정하기 위한 비선형 곡선 적용 과정 등을 다룹니다.</p>
+            <a href="https://maurycyz.com/misc/raw_photo/" class="btn btn-outline-info btn-sm" target="_blank">원문 보기</a>
+        </div>
+    </div>
+
+    <!-- News Item 2 -->
+    <div class="card mb-3">
+        <div class="card-body">
+            <h5 class="card-title text-info">당신은 HTML 태그를 직접 만들 수 있습니다</h5>
+            <p class="card-text text-body-secondary small">브라우저는 인식되지 않는 HTML 태그를 일반적인 요소로 취급하므로, `div`나 `span`에 수많은 클래스 이름을 사용하는 것보다 코드 가독성을 높일 수 있다고 설명합니다. 향후 HTML 버전과의 충돌을 피하기 위해 커스텀 태그 이름에 하이픈(-)을 사용할 것을 제안합니다.</p>
+            <a href="https://maurycyz.com/misc/make-up-tags/" class="btn btn-outline-info btn-sm" target="_blank">원문 보기</a>
+        </div>
+    </div>
+
+    <!-- News Item 3 -->
+    <div class="card mb-3">
+        <div class="card-body">
+            <h5 class="card-title text-info">Unity의 Mono 문제: 왜 당신의 C# 코드는 더 느리게 실행될까</h5>
+            <p class="card-text text-body-secondary small">Unity의 Mono 런타임과 최신 .NET 간의 성능 차이를 논의합니다. 벤치마크에 따르면 C# 코드는 Mono에서 훨씬 느리게 실행되며, 최신 .NET에서는 최대 15배의 속도 향상을 보입니다. 기사는 이를 런타임 최적화와 JIT(Just-In-Time) 컴파일러의 차이 때문으로 분석하며, Unity가 .NET CoreCLR을 완전히 도입할 경우 얻게 될 잠재적인 성능 향상을 강조합니다.</p>
+            <a href="https://marekfiser.com/blog/mono-vs-dot-net-in-unity/" class="btn btn-outline-info btn-sm" target="_blank">원문 보기</a>
+        </div>
+    </div>
+
+    <!-- News Item 4 -->
+    <div class="card mb-3">
+        <div class="card-body">
+            <h5 class="card-title text-info">MongoBleed 간단히 설명하기</h5>
+            <p class="card-text text-body-secondary small">2017년부터 MongoDB 버전에 영향을 미치는 심각한 취약점인 CVE-2025-14847에 대해 자세히 설명합니다. zlib 메시지 압축 경로의 이 버그는 공격자가 초기화되지 않은 임의의 힙 메모리를 읽을 수 있게 하여, 잠재적으로 비밀번호나 API 키와 같은 민감한 데이터를 노출시킬 수 있습니다. 이 공격은 인증 전에 가능하며 데이터베이스에 대한 네트워크 연결만 필요합니다. 최신 패치로 업데이트하거나 zlib 네트워크 압축을 비활성화하여 완화할 수 있습니다.</p>
+            <a href="https://bigdata.2minutestreaming.com/p/mongobleed-explained-simply" class="btn btn-outline-info btn-sm" target="_blank">원문 보기</a>
+        </div>
+    </div>
+</div>
 {% endblock %}

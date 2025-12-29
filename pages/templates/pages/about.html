@@ -5,7 +5,7 @@
 
 {% block content %}
 <style>
-/* ... existing timeline styles ... */
+/* Basic Timeline Styling */
 .timeline {
     position: relative;
     padding: 2rem 0;
@@ -78,10 +78,18 @@
         <img src="{% static 'blog/images/image.png' %}" class="img-fluid rounded-circle shadow-lg" alt="Profile Picture" style="max-width: 250px; border: 2px solid var(--laser-color-1);">
     </div>
     <div class="col-lg-8">
-        <h1 class="display-5 fw-bold text-info">...</h1>
+        <h1 class="display-5 fw-bold text-info">끊임없이 '왜?'를 묻고, 더 나은 해결책을 찾는 개발자</h1>
         <p class="lead text-body-secondary">
             단순한 구현을 넘어 본질적인 문제 해결에 집중하며, 코드를 통해 사용자에게 더 나은 경험을 제공합니다. <br>이 블로그는 저의 성장 과정과 고민을 기록하는 공간입니다.
         </p>
+    </div>
+</div>
+
+<!-- GitHub Contribution Graph -->
+<div class="text-center mb-5">
+    <h3 class="h4 mb-3"><i class="bi bi-github"></i> My GitHub Contributions</h3>
+    <div class="card p-3">
+        <img src="https://ghchart.rshah.org/216E39/b-hyoung" alt="b-hyoung's GitHub Contribution Graph" class="img-fluid rounded" style="filter: invert(1) hue-rotate(180deg) brightness(1.5);">
     </div>
 </div>
 
@@ -117,7 +125,7 @@
     </div>
 </div>
 
-<!-- ... rest of the template ... -->
+<!-- 3. Journey Timeline -->
 <div class="mb-5">
     <h2 class="h3 mb-4 text-center">My Journey</h2>
     <div class="timeline">
