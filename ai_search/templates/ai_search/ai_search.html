@@ -1,129 +1,340 @@
 {% extends "blog/base.html" %}
 {% load static %}
 
-{% block title %}AI Search{% endblock %}
+{% block title %}AI Chat{% endblock %}
 
 {% block content %}
 <style>
-/* Loading Overlay Styles */
-#loading-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background-color: rgba(0, 0, 0, 0.7);
-    display: none; /* Hidden by default */
-    justify-content: center;
-    align-items: center;
-    z-index: 1050; /* High z-index to be on top */
-    color: white;
-    text-align: center;
-}
+    .chat-page-container {
+        position: relative;
+        width: 100%;
+        height: 75vh; /* Give a fixed height to the container */
+        overflow: hidden;
+        background-color: #2c2c2c;
+        border-radius: 8px;
+    }
+
+    #project-panel {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 45%;
+        height: 100%;
+        background-color: #1e1e1e;
+        transform: translateX(-100%);
+        transition: transform 0.5s ease-in-out;
+        z-index: 10;
+        display: flex;
+        flex-direction: column;
+        border-right: 1px solid #444;
+    }
+
+    #project-panel.show {
+        transform: translateX(0);
+    }
+
+    .panel-header {
+        padding: 1rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border-bottom: 1px solid #444;
+        flex-shrink: 0;
+    }
+    .panel-header h4 {
+        margin: 0;
+        color: white;
+    }
+
+    .panel-content {
+        overflow-y: auto;
+        padding: 1rem;
+        color: white;
+    }
+
+    #chat-panel {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        transition: left 0.5s ease-in-out, width 0.5s ease-in-out;
+        display: flex;
+        flex-direction: column;
+        min-height: 0;
+    }
+
+    #chat-panel.pushed {
+        left: 45%;
+        width: 55%;
+    }
+
+    .chat-container {
+        width: 100%;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        min-height: 0; /* Fix for flexbox scrolling bug */
+    }
+
+    .chat-history {
+        flex-grow: 1;
+        overflow-y: auto;
+        padding: 20px;
+        display: flex;          /* Make chat-history a flex container */
+        flex-direction: column; /* Stack messages vertically */
+        align-items: flex-start; /* Default alignment for messages to the left */
+    }
+
+    .message { margin-bottom: 15px; padding: 10px 15px; border-radius: 20px; max-width: 80%; line-height: 1.4; }
+    .message.user { background-color: #0d6efd; color: white; align-self: flex-end; border-bottom-right-radius: 5px; }
+    .message.ai { background-color: #495057; color: white; border-bottom-left-radius: 5px; }
+    
+    #chat-form { display: flex; padding: 20px; border-top: 1px solid #444; }
+    #user-input { flex-grow: 1; background-color: #333; color: white; border: 1px solid #555; }
+    #user-input::placeholder { color: #888; }
+    
+    .project-card { background-color: #3a3a3a; color: white; border: none; }
+    .project-card .card-body a { margin-right: 5px; }
+    .spinner-border { width: 1.5rem; height: 1.5rem; vertical-align: -0.25em; }
+
+    .suggestions-container {
+        padding: 5px 0px 15px 0px;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        justify-content: flex-start;
+    }
+    .suggestion-chip {
+        background-color: #495057;
+        color: white;
+        padding: 8px 15px;
+        border-radius: 20px;
+        cursor: pointer;
+        transition: background-color 0.2s;
+        font-size: 0.9rem;
+    }
+    .suggestion-chip:hover {
+        background-color: #6c757d;
+    }
+
 </style>
 
-<!-- Loading Overlay HTML -->
-<div id="loading-overlay">
-    <div>
-        <i class="bi bi-robot" style="font-size: 4rem;"></i>
-        <h3 id="loading-text" class="mt-3">데이터를 가져오는중</h3>
-    </div>
+<div class="text-center mb-4">
+    <h1 class="display-5 fw-bold text-info">AI Assistant</h1>
+    <p class="lead text-body-secondary">안녕하세요! 저에 대해 궁금한 점을 물어보세요. 아래 추천 질문을 눌러 시작할 수 있습니다.</p>
+    <button id="clear-chat-btn" class="btn btn-sm btn-outline-danger mt-2"><i class="bi bi-trash"></i> 대화 내용 지우기</button>
 </div>
 
-
-<div class="row justify-content-center">
-    <div class="col-lg-10">
-
-        <div class="text-center mb-5">
-            <h1 class="display-5 fw-bold text-info">AI Search</h1>
-            <p class="lead text-body-secondary">궁금한 아이디어나 주제를 입력해 보세요. AI가 웹을 검색하여 한국어로 요약 정리해 드립니다.</p>
+<div class="chat-page-container">
+    <!-- Left Pane for Projects -->
+    <div id="project-panel">
+        <div class="panel-header">
+            <h4><i class="bi bi-kanban"></i> Projects</h4>
+            <button id="close-project-panel" type="button" class="btn-close btn-close-white" aria-label="Close"></button>
         </div>
+        <div class="panel-content" id="project-panel-content">
+            <!-- Project cards will be injected here -->
+        </div>
+    </div>
 
-        <div class="mb-5">
-            <form id="ai-search-form" method="post" action="{% url 'ai_search:search' %}">
-                {% csrf_token %}
-                <div class="input-group input-group-lg">
-                    <input type="text" class="form-control" placeholder="궁금한 것을 입력하세요 (예: 최신 웹 개발 트렌드)" aria-label="Search query" name="query" value="{{ query|default_if_none:'' }}">
-                    <button class="btn btn-primary" type="submit">
-                        <i class="bi bi-robot"></i> 검색
-                    </button>
-                </div>
+    <!-- Right Pane for Chat -->
+    <div id="chat-panel">
+        <div class="chat-container">
+            <div class="chat-history" id="chat-history">
+                <!-- Chat history will be loaded here by JavaScript -->
+            </div>
+            <form id="chat-form">
+                <input type="text" id="user-input" class="form-control" placeholder="메시지 입력..." autocomplete="off">
+                <button class="btn btn-primary" type="submit" id="submit-button"><i class="bi bi-send"></i></button>
             </form>
         </div>
-
-        {% if result or messages %}
-        <div class="mt-5">
-            {% if messages %}
-                <div class="mb-4">
-                    {% for message in messages %}
-                        <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
-                            {{ message }}
-                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                        </div>
-                    {% endfor %}
-                </div>
-            {% endif %}
-
-            {% if result %}
-                <h3 class="h4 text-info mb-3"><i class="bi bi-card-text"></i> AI 검색 결과</h3>
-                <div class="p-4 rounded-3" style="background-color: rgba(0,0,0,0.2);">
-                    <div class="text-white mb-0">
-                        {{ result|safe }}
-                    </div>
-                </div>
-            {% endif %}
-        </div>
-        {% endif %}
-        
     </div>
 </div>
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    const form = document.getElementById('ai-search-form');
-    const loadingOverlay = document.getElementById('loading-overlay');
-    const loadingText = document.getElementById('loading-text');
+    const CHAT_HISTORY_KEY = 'aiChatHistory';
+    const chatForm = document.getElementById('chat-form');
+    const userInput = document.getElementById('user-input');
+    const chatHistory = document.getElementById('chat-history');
+    const clearChatBtn = document.getElementById('clear-chat-btn');
 
-    if (form && loadingOverlay && loadingText) {
-        form.addEventListener('submit', function() {
-            // Show the loading overlay
-            loadingOverlay.style.display = 'flex';
+    const projectPanel = document.getElementById('project-panel');
+    const chatPanel = document.getElementById('chat-panel');
+    const projectPanelContent = document.getElementById('project-panel-content');
+    const closeProjectPanelBtn = document.getElementById('close-project-panel');
 
-            // Animate the loading text
-            let messageIndex = 0;
-            let dotCount = 1;
-            const loadingMessages = [
-                "AI가 데이터를 가져오는 중",
-                "지민이가 릴스 보는 중",
-                "AI가 데이터를 한국어로 변환 중",
-                "조금만 기다려주세요. 거의 다 됐어요(- _-)(-_ -)"
-            ];
-            
-            // Ensure the text starts with dots immediately
-            loadingText.textContent = loadingMessages[messageIndex] + ' .';
+    // --- Core Functions ---
 
-            setInterval(function() {
-                // Get the current base message
-                const baseText = loadingMessages[messageIndex];
-                
-                // Create the animated ellipsis
-                let dots = ' '.repeat(dotCount);
-                dots = dots.replace(/ /g, '.'); // Create a string of dots
+    function appendMessage(content, sender, saveToStorage = true) {
+        const messageDiv = document.createElement('div');
+        messageDiv.classList.add('message', sender);
+        if (sender === 'ai') {
+            messageDiv.innerHTML = content;
+        } else {
+            messageDiv.textContent = content;
+        }
+        chatHistory.appendChild(messageDiv);
+        scrollToBottom();
 
-                // Update the text content
-                loadingText.textContent = baseText + dots;
+        if (saveToStorage) {
+            saveChatHistory();
+        }
+    }
 
-                // Increment dot count
-                if (dotCount >= 4) {
-                    dotCount = 1;
-                    messageIndex = (messageIndex + 1) % loadingMessages.length;
+    function fetchBackend(userMessage) {
+        fetch("{% url 'ai_search:chat_interaction' %}", {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-CSRFToken': '{{ csrf_token }}' },
+            body: JSON.stringify({ message: userMessage })
+        })
+        .then(response => response.json())
+        .then(data => {
+            removeTypingIndicator();
+
+            // Always remove old suggestions before processing new response
+            const suggestionsContainer = chatHistory.querySelector('.suggestions-container');
+            if(suggestionsContainer) suggestionsContainer.remove();
+
+            if (data.response) {
+                if (data.response.type === 'html') {
+                    projectPanelContent.innerHTML = data.response.content;
+                    projectPanel.classList.add('show');
+                    chatPanel.classList.add('pushed');
+                    appendMessage('프로젝트 목록을 왼쪽에 표시했습니다. 닫으려면 왼쪽 상단의 X 버튼을 누르세요.', 'ai');
                 } else {
-                    dotCount++;
+                    appendMessage(data.response.content, 'ai');
                 }
-            }, 700); // Animation speed
+
+                // After handling content, check for and display new suggestions
+                if (data.response.suggestions && data.response.suggestions.length > 0) {
+                    showSuggestions(data.response.suggestions);
+                }
+            }
+        })
+        .catch(error => {
+            removeTypingIndicator();
+            console.error('Error:', error);
+            appendMessage('죄송합니다, 오류가 발생했습니다. 다시 시도해 주세요.', 'ai');
         });
     }
+
+    // --- Suggestion Chips ---
+
+    function showSuggestions(suggestions) {
+        const existingContainer = chatHistory.querySelector('.suggestions-container');
+        if (existingContainer) existingContainer.remove();
+
+        const container = document.createElement('div');
+        container.className = 'suggestions-container';
+        suggestions.forEach(text => {
+            const chip = document.createElement('div');
+            chip.className = 'suggestion-chip';
+            chip.textContent = text;
+            chip.addEventListener('click', onSuggestionClick);
+            container.appendChild(chip);
+        });
+        chatHistory.appendChild(container);
+        scrollToBottom();
+    }
+
+    function onSuggestionClick(e) {
+        const message = e.target.textContent;
+        const container = e.target.parentElement;
+        if(container) container.remove();
+        
+        appendMessage(message, 'user');
+        showTypingIndicator();
+        fetchBackend(message);
+    }
+
+    // --- History Management ---
+
+    function saveChatHistory() {
+        const messages = [];
+        chatHistory.querySelectorAll('.message').forEach(msgDiv => {
+            if (msgDiv.id === 'typing-indicator') return;
+            messages.push({
+                content: msgDiv.innerHTML,
+                sender: msgDiv.classList.contains('user') ? 'user' : 'ai'
+            });
+        });
+        localStorage.setItem(CHAT_HISTORY_KEY, JSON.stringify(messages));
+    }
+
+    function loadChatHistory() {
+        const storedHistory = localStorage.getItem(CHAT_HISTORY_KEY);
+        if (storedHistory) {
+            const messages = JSON.parse(storedHistory);
+            if (messages.length > 0) {
+                messages.forEach(msg => appendMessage(msg.content, msg.sender, false));
+                return true;
+            }
+        }
+        return false;
+    }
+    
+    // --- Typing Indicator ---
+
+    function showTypingIndicator() {
+        const typingDiv = document.createElement('div');
+        typingDiv.id = 'typing-indicator';
+        typingDiv.classList.add('message', 'ai');
+        typingDiv.innerHTML = '<div class="spinner-border text-light" role="status"><span class="visually-hidden">Loading...</span></div>';
+        chatHistory.appendChild(typingDiv);
+        scrollToBottom();
+    }
+
+    function removeTypingIndicator() {
+        const indicator = document.getElementById('typing-indicator');
+        if (indicator) indicator.remove();
+    }
+    
+    function scrollToBottom() {
+        chatHistory.scrollTop = chatHistory.scrollHeight;
+    }
+
+    // --- Event Listeners & Initialization ---
+    
+    chatHistory.innerHTML = ''; // Clear static content
+
+    const historyLoaded = loadChatHistory();
+    if (!historyLoaded) {
+        appendMessage('안녕하세요.', 'ai');
+        showSuggestions(['프로젝트 보여줘', '기술 스택 알려줘', '무엇을 할 수 있나요?']);
+    }
+
+    if(clearChatBtn) {
+        clearChatBtn.addEventListener('click', function() {
+            if (confirm('정말로 대화 내용을 모두 지우시겠습니까?')) {
+                chatHistory.innerHTML = '';
+                localStorage.removeItem(CHAT_HISTORY_KEY);
+                projectPanel.classList.remove('show');
+                chatPanel.classList.remove('pushed');
+                appendMessage('안녕하세요.', 'ai');
+                showSuggestions(['프로젝트 보여줘', '기술 스택 알려줘', '무엇을 할 수 있나요?']);
+            }
+        });
+    }
+    
+    chatForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+        const userMessage = userInput.value.trim();
+        if (!userMessage) return;
+        const suggestionsContainer = chatHistory.querySelector('.suggestions-container');
+        if(suggestionsContainer) suggestionsContainer.remove();
+
+        appendMessage(userMessage, 'user');
+        userInput.value = '';
+        showTypingIndicator();
+        fetchBackend(userMessage);
+    });
+    
+    closeProjectPanelBtn.addEventListener('click', () => {
+        projectPanel.classList.remove('show');
+        chatPanel.classList.remove('pushed');
+    });
 });
 </script>
-
 {% endblock %}

@@ -1,116 +1,171 @@
 import json
 import requests
 import markdown
+from django.http import JsonResponse
 from django.shortcuts import render
-from django.contrib import messages
+from django.template.loader import render_to_string
+from projects.models import Project
 
-
-# Agent's tools for web search and fetching (simulated by Python comments for local execution)
-# from core.agent_tools import google_web_search, web_fetch 
+# --- Tech Name Mapping ---
+TECH_MAP = {
+    '파이썬': 'python', 'python': 'python',
+    '장고': 'django', 'django': 'django',
+    '리액트': 'react', 'react': 'react',
+    '도커': 'docker', 'docker': 'docker',
+    '자바스크립트': 'javascript', 'javascript': 'javascript',
+    '자바': 'java', 'java': 'java',
+    'mysql': 'mysql',
+    'postgresql': 'postgresql',
+}
 
 def ai_search_view(request):
-    query = None
-    ai_result = None
+    """
+    Renders the main AI chat interface page.
+    """
+    return render(request, 'ai_search/ai_search.html', {'hide_layout_elements': True})
 
+def chat_interaction(request):
+    """
+    Handles conversational AJAX requests, integrating session-based context memory,
+    interactive project filtering, and LLM fallback.
+    """
     if request.method == 'POST':
-        query = request.POST.get('query', '').strip()
-        if not query:
-            messages.error(request, '검색어를 입력해 주세요.')
-            return render(request, 'ai_search/ai_search.html', {'query': query})
-
         try:
-            # --- Step 1: Simulate Agent's Google Web Search ---
-            # In a real environment, this would be a tool call to google_web_search
-            # For local execution, you might replace this with a direct call to a search API
+            history = request.session.get('chat_history', [])
+            data = json.loads(request.body)
+            user_message = data.get('message', '').lower().strip()
+            ai_response = {}
+            simplified_ai_text = ''
+
+            # 1. Analyze user message for tech keywords using TECH_MAP
+            detected_techs = list(set([TECH_MAP[key] for key in TECH_MAP if key in user_message]))
             
-            # Simulated search results (as if from google_web_search)
+            last_ai_response_text = history[-1]['ai'] if history else ''
+            is_project_context = '[프로젝트]' in last_ai_response_text
+
+            # 3. Determine action
+            # Get all distinct technologies from visible projects for dynamic suggestions
+            available_techs_in_visible_projects = set()
+            for project in Project.objects.filter(is_visible=True):
+                for tech_raw in project.technologies.split(','):
+                    tech_en = tech_raw.strip().lower()
+                    if tech_en in TECH_MAP.values(): # Check if it's a known tech
+                        available_techs_in_visible_projects.add(tech_en)
+
+            dynamic_project_suggestions = []
+            if '모든 프로젝트 보기' not in user_message: # Avoid adding if user explicitly asked for all
+                dynamic_project_suggestions.append('모든 프로젝트 보기')
             
-            # Placeholder for actual search results. For the agent's workflow,
-            # this would be replaced by actual web search and processing.
-            simulated_search_results = [
-                {"title": "Sample Article 1", "link": "https://example.com/article1"},
-                {"title": "Sample Article 2", "link": "https://example.com/article2"},
-                # Add more simulated results here as needed for local testing
-            ]
+            # Map back to Korean for display
+            for tech_en in sorted(list(available_techs_in_visible_projects)):
+                # Find the Korean name if available, otherwise use English
+                # Prioritize Korean key if it maps to the tech_en
+                tech_display = next((k for k, v in TECH_MAP.items() if v == tech_en and k != v), tech_en)
+                dynamic_project_suggestions.append(f"{tech_display.capitalize()} 프로젝트만 보기")
 
-            if not simulated_search_results:
-                messages.warning(request, f"'{query}'에 대한 검색 결과를 찾을 수 없습니다.")
-                return render(request, 'ai_search/ai_search.html', {'query': query})
 
-            # --- Step 2: Simulate Agent's Web Fetch ---
-            # In a real environment, this would be parallel web_fetch calls.
-            # For local execution, you might implement web scraping or specific API calls.
+            # Priority 1: Follow-up filtering
+            if detected_techs and is_project_context:
+                tech_to_filter = detected_techs[0]
+                projects = Project.objects.filter(is_visible=True, technologies__iregex=fr'\b{tech_to_filter}\b').order_by('-created_at')
+                if projects.exists():
+                    ai_response = {'type': 'html', 'content': render_to_string('ai_search/_project_cards.html', {'projects': projects})}
+                    ai_response['suggestions'] = dynamic_project_suggestions
+                    simplified_ai_text = f"[{tech_to_filter} 프로젝트 목록 표시]"
+                else:
+                    ai_response = {'type': 'text', 'content': f"'{tech_to_filter}' 기술을 포함하는 프로젝트를 찾을 수 없습니다."}
             
-            fetched_contents = []
-            for item in simulated_search_results[:2]: # Fetch content for top 2 articles
-                # Placeholder for actual content fetching.
-                # In a real local setup, you'd use requests.get() and parse the HTML/text.
-                fetched_contents.append(f"Content from {item['link']}: This is some sample content about {query} from {item['title']}.")
+            # Priority 2: Initial project request (with optional filter)
+            elif '프로젝트' in user_message:
+                projects_query = Project.objects.filter(is_visible=True)
+                if detected_techs:
+                    tech_to_filter = detected_techs[0]
+                    projects = projects_query.filter(technologies__iregex=fr'\b{tech_to_filter}\b').order_by('-created_at')
+                    if projects.exists():
+                        ai_response = {'type': 'html', 'content': render_to_string('ai_search/_project_cards.html', {'projects': projects})}
+                        ai_response['suggestions'] = dynamic_project_suggestions
+                        simplified_ai_text = f'[{tech_to_filter} 프로젝트 목록 표시]'
+                    else:
+                        ai_response = {'type': 'text', 'content': f"'{tech_to_filter}' 기술을 사용하는 프로젝트를 찾을 수 없습니다."}
+                else:
+                    projects = projects_query.order_by('-created_at')
+                    if projects.exists():
+                        ai_response = {'type': 'html', 'content': render_to_string('ai_search/_project_cards.html', {'projects': projects})}
+                        ai_response['suggestions'] = dynamic_project_suggestions
+                        simplified_ai_text = '[프로젝트 목록 표시]'
+                    else:
+                        ai_response = {'type': 'text', 'content': '현재 데이터베이스에 등록된 프로젝트가 없습니다.'}
 
-            if not fetched_contents:
-                messages.warning(request, "가져올 수 있는 웹 콘텐츠가 없습니다.")
-                return render(request, 'ai_search/ai_search.html', {'query': query})
-
-            # --- Step 3: Prepare Prompt for Ollama ---
-            combined_content = "\n\n".join(fetched_contents)
-            ollama_prompt = f"""다음 웹 콘텐츠를 분석하고, '{query}'에 대한 정보를 한국어로 요약 정리해 주세요.
-불필요한 내용은 제거하고, 핵심 정보 위주로 상세하게 설명해 주세요.
-응답은 오직 한국어로만 작성해야 합니다. 추가 설명이나 인사말 없이 바로 요약 내용부터 시작하세요.
-
---- 사용자 질의: {query} ---
-
---- 웹 콘텐츠: ---
-{combined_content}
-
---- 요약 정리 (한국어): ---
-"""
-
-            # --- Step 4: Ollama API Call (Placeholder - User must uncomment and configure for local Ollama) ---
-            # IMPORTANT: This part assumes Ollama is running locally on http://localhost:11434
-            # and that 'llama3:instruct' model is available.
-            # If you are running this code, UNCOMMENT the 'requests' import at the top
-            # and the following 'ollama_api_url' and 'payload' sections.
-            # You might also need to install the 'requests' library: pip install requests
-            
-            ollama_api_url = "http://localhost:11434/api/generate"
-            payload = {
-                "model": "llama3:instruct",
-                "prompt": ollama_prompt,
-                "stream": False, # Set to True for streaming responses
-                "options": {
-                    "temperature": 0.7,
+            # Priority 3: Other keywords
+            elif '기술' in user_message or '스택' in user_message:
+                ai_response = {
+                    'type': 'html',
+                    'content': """
+                    <p>포트폴리오의 주요 기술 스택은 다음과 같습니다. 💻</p>
+                    <ul>
+                        <li><strong>Python &amp; Django:</strong> 안정적인 백엔드 시스템을 구축합니다.</li>
+                        <li><strong>JavaScript &amp; React:</strong> 동적이고 인터랙티브한 프론트엔드를 구현합니다.</li>
+                        <li><strong>Docker:</strong> 개발 및 배포 환경의 일관성을 유지하고 운영 효율성을 높입니다.</li>
+                        <li><strong>Databases:</strong> PostgreSQL, MySQL 등 관계형 데이터베이스를 다룹니다.</li>
+                        <li><strong>Cloud:</strong> AWS, Google Cloud 등 클라우드 인프라 활용 경험이 있습니다.</li>
+                    </ul>
+                    """,
+                    'suggestions': ['관련 프로젝트 보여줘']
                 }
-            }
-
+                simplified_ai_text = '[기술 스택 표시]'
             
-            # --- Actual Ollama API call would go here (uncomment for local testing) ---
-            response = requests.post(ollama_api_url, json=payload, timeout=300)
-            response.raise_for_status()
-            ollama_response_data = response.json()
-            ai_result_md = ollama_response_data.get('response', 'Ollama에서 응답을 받지 못했습니다.')
-            ai_result = markdown.markdown(ai_result_md) if ai_result_md else ''
-
-            # --- SIMULATED AI Response (for agent's workflow / if Ollama call is commented out) ---
-            # The agent (me) will perform the summarization and translation based on the prompt.
-            # User will see this simulated response if Ollama call is not uncommented.
+            elif '소개' in user_message or '너' in user_message or '누구' in user_message or '뭘할수있' in user_message or '무엇을 할수있' in user_message:
+                ai_response = {
+                    'type': 'html',
+                    'content': """
+                    <p>저는 이 포트폴리오의 주인에 대해 알려주기 위해 만들어진 AI 어시스턴트입니다. 제가 할 수 있는 일은 다음과 같습니다:</p>
+                    <ul>
+                        <li><strong>프로젝트 정보 제공:</strong> "프로젝트 보여줘"라고 입력하시면 주인의 포트폴리오 프로젝트들을 상세히 보여드릴 수 있습니다.</li>
+                        <li><strong>기술 스택 설명:</strong> "기술" 또는 "스택"에 대해 물어보시면 주인이 주로 사용하는 기술 스택을 알려드립니다.</li>
+                        <li><strong>일반적인 대화:</strong> 포트폴리오와 관련하여 궁금한 점이 있으시다면 자유롭게 질문해주세요. 제가 아는 범위 내에서 성심껏 답변해 드립니다.</li>
+                    </ul>
+                    """
+                }
+                simplified_ai_text = '[기능 소개 표시]'
             
-            # ai_result = f"'{query}'에 대한 AI 요약 결과입니다. (이 메시지는 Ollama 연결 없이 생성된 시뮬레이션 결과입니다.)\n\n" \
-            #             f"이곳에는 '{query}'에 대한 웹 검색 결과를 바탕으로 AI가 요약하고 한국어로 정리한 내용이 들어갑니다. " \
-            #             f"주요 정보와 핵심 개념 위주로 설명되며, 예를 들어 '웹 개발 트렌드'에 대한 검색이라면, " \
-            #             f"새로운 프레임워크, AI/ML 통합, 보안 동향 등에 대한 상세한 분석이 포함될 수 있습니다."
-            # messages.success(request, 'AI 검색이 완료되었습니다!')
-            # This part is already uncommented now, so the simulated response is not active.
-            # No changes needed here. The user must have uncommented the Ollama part.
-            messages.success(request, 'AI 검색이 완료되었습니다!')
+            elif '안녕' in user_message or 'hi' in user_message or 'hello' in user_message:
+                ai_response = { 
+                    'type': 'text', 
+                    'content': '안녕하세요! 무엇을 도와드릴까요? "프로젝트 목록"이나 "기술 스택"에 대해 물어보시면 제가 아는 정보를 보여드릴게요.',
+                    'suggestions': ['프로젝트 보여줘', '기술 스택 알려줘', '무엇을 할 수 있나요?']
+                }
 
-        except requests.exceptions.ConnectionError:
-            messages.error(request, 'Ollama 서버에 연결할 수 없습니다. Ollama가 실행 중인지 확인하고, `llama3:instruct` 모델이 다운로드되었는지 확인하세요.')
-            ai_result = "Ollama 서버 연결 실패. Ollama가 실행 중이고 모델이 준비되었는지 확인해 주세요."
-        except requests.exceptions.RequestException as e:
-            messages.error(request, f'Ollama API 호출 중 오류가 발생했습니다: {e}')
-            ai_result = f"Ollama API 오류: {e}"
+            # Priority 4: Fallback to LLM with context
+            if not ai_response:
+                formatted_history = "\n".join([f"User: {h['user']}\nAssistant: {h['ai']}" for h in history])
+                system_prompt = "You are a helpful AI assistant for a personal portfolio website. Your owner is a developer. Please answer the user's questions based on the persona of an assistant who knows the developer well. **You must always answer in Korean.**"
+                prompt_text = f"{system_prompt}\n\n{formatted_history}\n\nUser: {user_message}\n\nAssistant (in Korean): "
+                
+                try:
+                    ollama_api_url = "http://localhost:11434/api/generate"
+                    payload = {"model": "llama3:instruct", "prompt": prompt_text, "stream": False, "options": {"temperature": 0.7}}
+                    response = requests.post(ollama_api_url, json=payload, timeout=300)
+                    response.raise_for_status()
+                    ollama_response_data = response.json()
+                    ollama_text_response = ollama_response_data.get('response', 'Ollama에서 응답을 받지 못했습니다.')
+                    ai_response = {'type': 'text', 'content': markdown.markdown(ollama_text_response)}
+                except requests.exceptions.ConnectionError:
+                    ai_response = {'type': 'text', 'content': 'Ollama 서버에 연결할 수 없습니다.'}
+                except requests.exceptions.RequestException as e:
+                    ai_response = {'type': 'text', 'content': f'Ollama API 호출 중 오류: {e}'}
+
+            # 4. Save new exchange to session history
+            if not simplified_ai_text:
+                simplified_ai_text = ai_response.get('content', '')
+
+            history.append({'user': user_message, 'ai': simplified_ai_text})
+            request.session['chat_history'] = history[-4:]
+
+            return JsonResponse({'response': ai_response})
+
         except Exception as e:
-            messages.error(request, f'예상치 못한 오류가 발생했습니다: {e}')
-            ai_result = f"오류 발생: {e}"
+            import traceback
+            traceback.print_exc()
+            return JsonResponse({'error': str(e)}, status=500)
 
-    return render(request, 'ai_search/ai_search.html', {'query': query, 'result': ai_result})
+    return JsonResponse({'error': 'Invalid request method'}, status=405)

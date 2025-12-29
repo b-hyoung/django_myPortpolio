@@ -5,4 +5,5 @@ app_name = 'ai_search'
 
 urlpatterns = [
     path('', views.ai_search_view, name='search'),
+    path('chat/', views.chat_interaction, name='chat_interaction'),
 ]

@@ -3,6 +3,62 @@
 
 {% block title %}About - B-hyoung{% endblock %}
 
+{# Custom CSS for this page #}
+{% block custom_css %}{% endblock %} {# Empty aggressive CSS #}
+
+{# Override sidebar for this page #}
+{% block sidebar_extra_classes %}{% endblock %} {# No sticky-top for now #}
+{% block sidebar_widgets %}
+    <div class="card p-3 mb-4" style="height: max-content; top: 30%; position: sticky; margin-left: 3rem;">
+        <h5 class="text-center mb-3">Skills & Expertise</h5>
+        <div class="skill-category mb-3">
+            <h6 class="text-info"><i class="bi bi-code-slash"></i> Languages</h6>
+            <div style="display: flex; flex-wrap: wrap; gap: 7px;">
+                <span class="badge fs-7 badge-outline-laser-1">Python</span>
+                <span class="badge fs-7 badge-outline-laser-1">Java</span>
+                <span class="badge fs-7 badge-outline-laser-1">JavaScript</span>
+            </div>
+        </div>
+        <div class="skill-category mb-3">
+            <h6 class="text-info"><i class="bi bi-layers-fill"></i> Frameworks</h6>
+            <div style="display: flex; flex-wrap: wrap; gap: 7px;">
+                <span class="badge fs-7 badge-outline-laser-2">NextJs</span>
+                <span class="badge fs-7 badge-outline-laser-2">Spring Boot</span>
+                <span class="badge fs-7 badge-outline-laser-2">React</span>
+                <span class="badge fs-7 badge-outline-laser-2">Django</span>
+            </div>
+        </div>
+        <div class="skill-category mb-3">
+            <h6 class="text-info"><i class="bi bi-server"></i> Tools & Infra</h6>
+            <div style="display: flex; flex-wrap: wrap; gap: 7px;">
+                <span class="badge fs-7 badge-outline-laser-1">Docker</span>
+                <span class="badge fs-7 badge-outline-laser-1">Git & GitHub</span>
+                <span class="badge fs-7 badge-outline-laser-1">PostgreSQL</span>
+                <span class="badge fs-7 badge-outline-laser-1">AWS</span>
+            </div>
+        </div>
+        <div class="skill-category mb-3">
+            <h6 class="text-info"><i class="bi bi-database-fill"></i> Databases</h6>
+            <div style="display: flex; flex-wrap: wrap; gap: 7px;">
+                <span class="badge fs-7 badge-outline-laser-2">MySQL</span>
+                <span class="badge fs-7 badge-outline-laser-2">MongoDB</span>
+            </div>
+        </div>
+        <div class="skill-category">
+            <h6 class="text-info"><i class="bi bi-cloud-arrow-up-fill"></i> Deployment & CI/CD</h6>
+            <div style="display: flex; flex-wrap: wrap; gap: 7px;">
+                <span class="badge fs-7 badge-outline-laser-1">Docker Compose</span>
+                <span class="badge fs-7 badge-outline-laser-1">Kubernetes</span>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{# Explicitly set column classes for main content and sidebar #}
+{% block main_content_classes %}col-lg-9 col-md-8{% endblock %}
+{% block sidebar_col_classes %}col-lg-3 col-md-4{% endblock %}
+
+{% with show_hero_section=False %} {# Hide the hero section for this page #}
 {% block content %}
 <style>
 /* Basic Timeline Styling */
@@ -73,12 +129,12 @@
 </style>
 
 <!-- 1. Profile & Intro -->
-<div class="row align-items-center g-5 mb-5">
+<div class="row align-items-center g-5 mb-5" style="margin-top: 20px;">
     <div class="col-lg-4 text-center">
         <img src="{% static 'blog/images/image.png' %}" class="img-fluid rounded-circle shadow-lg" alt="Profile Picture" style="max-width: 250px; border: 2px solid var(--laser-color-1);">
     </div>
     <div class="col-lg-8">
-        <h1 class="display-5 fw-bold text-info">끊임없이 '왜?'를 묻고, 더 나은 해결책을 찾는 개발자</h1>
+        <h3 class="display-5 fw-bold text-info">B-hyoung</h3>
         <p class="lead text-body-secondary">
             단순한 구현을 넘어 본질적인 문제 해결에 집중하며, 코드를 통해 사용자에게 더 나은 경험을 제공합니다. <br>이 블로그는 저의 성장 과정과 고민을 기록하는 공간입니다.
         </p>
@@ -93,59 +149,35 @@
     </div>
 </div>
 
-<!-- 2. Skills -->
-<div class="mb-5">
-    <h2 class="h3 mb-4 text-center">Skills & Expertise</h2>
-    <div class="card p-4">
-        <div class="row g-4">
-            <div class="col-md-4 skill-category">
-                <h5 class="text-info"><i class="bi bi-code-slash"></i> Languages</h5>
-                <p style="display: flex; flex-wrap: wrap; gap: 10px;">
-                    <span class="badge fs-6 badge-outline-laser-1">Python</span>
-                    <span class="badge fs-6 badge-outline-laser-1">Java Spring</span>
-                </p>
-            </div>
-            <div class="col-md-4 skill-category">
-                <h5 class="text-info"><i class="bi bi-layers-fill"></i> Frameworks</h5>
-                <p style="display: flex; flex-wrap: wrap; gap: 10px;">
-                    <span class="badge fs-6 badge-outline-laser-2">Django</span>
-                    <span class="badge fs-6 badge-outline-laser-2">React</span>
-                    <span class="badge fs-6 badge-outline-laser-2">Bootstrap</span>
-                </p>
-            </div>
-            <div class="col-md-4 skill-category">
-                <h5 class="text-info"><i class="bi bi-server"></i> Tools & Infra</h5>
-                <p style="display: flex; flex-wrap: wrap; gap: 10px;">
-                    <span class="badge fs-6 badge-outline-laser-1">Docker</span>
-                    <span class="badge fs-6 badge-outline-laser-1">Git & GitHub</span>
-                    <span class="badge fs-6 badge-outline-laser-1">PostgreSQL</span>
-                </p>
-            </div>
-        </div>
-    </div>
-</div>
 
-<!-- 3. Journey Timeline -->
+
+<!-- 3. My Strengths & Aspirations -->
 <div class="mb-5">
-    <h2 class="h3 mb-4 text-center">My Journey</h2>
+    <h2 class="h3 mb-4 text-center">My Strengths & Aspirations</h2>
     <div class="timeline">
-        <!-- Timeline Item 1 -->
+        <!-- Aspirations Item 1 -->
         <div class="timeline-item">
-            <div class="timeline-date">202X년</div>
-            <h5 class="text-info">첫 코딩 입문</h5>
-            <p class="text-body-secondary">이곳에 자신의 개발 여정의 시작에 대한 스토리를 작성하세요. 어떤 계기로 개발에 입문하게 되었나요?</p>
+            <div class="timeline-date">집요한 몰입력과 문제 해결</div>
+            <h5 class="text-info">문제가 해결될 때까지 놓지 않는 끈기</h5>
+            <p class="text-body-secondary">저는 문제가 해결될 때까지 놓지 않는 집요한 몰입력을 가지고 있습니다. 개발 과정에서 막히는 부분이 생기면 대충 넘기지 않고 원인을 끝까지 파악하여 확실히 마무리하는 편입니다. 이러한 끈기와 문제 해결 능력은 복잡한 개발 과제에 도전하고 성공적으로 완수하는 데 중요한 강점이 됩니다.</p>
         </div>
-        <!-- Timeline Item 2 -->
+        <!-- Aspirations Item 2 -->
         <div class="timeline-item">
-            <div class="timeline-date">202X년</div>
-            <h5 class="text-info">첫 프로젝트 경험</h5>
-            <p class="text-body-secondary">처음으로 의미있는 프로젝트를 진행했던 경험을 공유해보세요. 무엇을 만들었고, 무엇을 배웠나요?</p>
+            <div class="timeline-date">배움에 대한 갈증</div>
+            <h5 class="text-info">실용적인 기술 습득과 적용</h5>
+            <p class="text-body-secondary">국비 교육을 통해 웹 개발의 기초를 다졌고, 이후 개인 및 팀 프로젝트를 수행하며 Django, React 등의 프레임워크와 Docker, Git 등의 도구를 익혔습니다. 25년 비전대 입학은 개발 지식에 대한 저의 끊임없는 배움의 의지를 보여줍니다. 실제 서비스에 기여할 수 있는 실용적인 기술을 배우고 적용하는 것을 즐깁니다.</p>
         </div>
-        <!-- Timeline Item 3 -->
+        <!-- Aspirations Item 3 -->
         <div class="timeline-item">
-            <div class="timeline-date">현재</div>
-            <h5 class="text-info">미래를 향한 현재의 나</h5>
-            <p class="text-body-secondary">현재 어떤 기술에 집중하고 있고, 앞으로 어떤 개발자로 성장하고 싶은지 목표를 작성해보세요.</p>
+            <div class="timeline-date">효율적인 몰입과 작업 전환</div>
+            <h5 class="text-info">생산직 경험에서 얻은 '체크포인트' 습관</h5>
+            <p class="text-body-secondary">한 번 집중하면 깊게 몰입하는 편이지만, 갑작스럽게 흐름이 끊기면 다시 집중 상태로 돌아오는 데 시간이 걸리는 약점이 있었습니다. 이를 보완한 것은 과거 생산직 근무 경험입니다. 당시 상황에 따라 여러 공정을 오가야 하는 환경에서, 작업 전환 시 진행 상황을 짧게 메모하는 '체크포인트' 습관을 익혔습니다. 이 덕분에 현재는 개발 중 흐름이 끊겨도 기록해둔 이정표를 보며 즉시 몰입 상태로 복귀하여 효율성을 유지하고 있습니다.</p>
+        </div>
+        <!-- Aspirations Item 4 -->
+        <div class="timeline-item">
+            <div class="timeline-date">미래를 향한 포부</div>
+            <h5 class="text-info">사용자에게 가치를 제공하는 개발</h5>
+            <p class="text-body-secondary">단순히 코드를 작성하는 것을 넘어, 제가 만든 서비스가 사용자들에게 긍정적인 영향을 미치고, 비즈니스 목표 달성에 기여하는 개발자가 되는 것이 저의 목표입니다. 끊임없이 변화하는 기술 트렌드를 학습하고 적용하며, 지속적으로 발전하는 개발자로 성장하고 싶습니다.</p>
         </div>
     </div>
 </div>
@@ -162,3 +194,4 @@
 </div>
 
 {% endblock %}
+{% endwith %}
