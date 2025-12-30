@@ -5,3 +5,8 @@ pip install -r requirements.txt
 
 python manage.py collectstatic --noinput
 python manage.py migrate
+
+if [ "${CREATE_SUPERUSER}" = "true" ]; then
+  echo "Creating superuser (non-interactive) ..."
+  python manage.py createsuperuser --noinput || true
+fi

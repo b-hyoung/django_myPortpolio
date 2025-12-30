@@ -21,12 +21,25 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-)l6bq5-fjy%_sjug9#&xlo0a-m4#l6-t_hr#uzeu8)mvuwa619'
+SECRET_KEY = os.environ.get("SECRET_KEY", "django-insecure-local-key")
+
+# Render sets RENDER_EXTERNAL_HOSTNAME in production.
+RENDER_EXTERNAL_HOSTNAME = os.environ.get("RENDER_EXTERNAL_HOSTNAME")
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+# - Local default: True
+# - Render default: False
+if os.environ.get("DEBUG") is not None:
+    DEBUG = os.environ.get("DEBUG", "False").lower() == "true"
+else:
+    DEBUG = False if RENDER_EXTERNAL_HOSTNAME else True
 
-ALLOWED_HOSTS = []
+# Allowed hosts
+if RENDER_EXTERNAL_HOSTNAME:
+    ALLOWED_HOSTS = [RENDER_EXTERNAL_HOSTNAME, "localhost", "127.0.0.1"]
+else:
+    extra_hosts = [h.strip() for h in os.environ.get("ALLOWED_HOSTS", "").split(",") if h.strip()]
+    ALLOWED_HOSTS = ["localhost", "127.0.0.1"] + extra_hosts
 
 
 # Application definition
@@ -52,6 +65,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -96,6 +110,14 @@ DATABASES = {
     }
 }
 
+# If DATABASE_URL is set (Render/Neon), use it.
+if os.environ.get("DATABASE_URL"):
+    DATABASES["default"] = dj_database_url.parse(
+        os.environ["DATABASE_URL"],
+        conn_max_age=600,
+        ssl_require=True,
+    )
+
 
 # Password validation
 # https://docs.djangoproject.com/en/5.2/ref/settings/#auth-password-validators
@@ -131,7 +153,14 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
 
-STATIC_URL = 'static/'
+STATIC_URL = '/static/'
+STATIC_ROOT = BASE_DIR / 'staticfiles'
+
+# WhiteNoise storage (compressed + cache-busted filenames)
+STORAGES = {
+    "default": {"BACKEND": "django.core.files.storage.FileSystemStorage"},
+    "staticfiles": {"BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage"},
+}
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
@@ -150,40 +179,3 @@ EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend' # Use console b
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
-
-
-# ✅ 1) SECRET_KEY는 환경변수로 관리 (로컬은 기본값 사용)
-SECRET_KEY = os.environ.get("SECRET_KEY","django-insecure-local-key")
-
-# ✅ 2) DEBUG: 배포에서는 False가 안전함
-# Render에서 환경변수(예: RENDER=true)를 넣어두고 판별하는 방식이 깔끔함
-DEBUG = os.environ.get("DEBUG","False") =="True"
-
-# ✅ 3) 허용 호스트
-# 초보 단계에서는 * 로 해도 되지만, 실제 서비스는 도메인만 넣는 게 안전함
-ALLOWED_HOSTS = os.environ.get("ALLOWED_HOSTS","*").split(",")
-
-# ✅ 4) DATABASE_URL이 있으면(Postgres/Neon) 그걸 사용, 없으면 기본(SQLite) 사용
-if os.environ.get("DATABASE_URL"):
-    DATABASES["default"] = dj_database_url.parse(
-        os.environ["DATABASE_URL"],
-        conn_max_age=600,
-        ssl_require=True,
-    )
-
-# ✅ 5) 정적파일(Static) - WhiteNoise
-STATIC_URL ="static/"
-STATIC_ROOT = os.path.join(BASE_DIR,"staticfiles")
-
-MIDDLEWARE = [
-"django.middleware.security.SecurityMiddleware",
-"whitenoise.middleware.WhiteNoiseMiddleware",# ✅ 추가(가능하면 위쪽에)
-# 나머지 미들웨어들...
-] + [mw for mw in MIDDLEWARE if mw not in [
-"django.middleware.security.SecurityMiddleware",
-"whitenoise.middleware.WhiteNoiseMiddleware",
-]]
-
-# WhiteNoise 추천 설정(압축+캐시용)
-STATICFILES_STORAGE ="whitenoise.storage.CompressedManifestStaticFilesStorage"
-
