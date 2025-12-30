@@ -65,7 +65,7 @@ def chat_interaction(request):
         projects = Project.objects.filter(is_visible=True).order_by('-created_at')[:5]
         project_context = "\n\n".join([
             f"Project Title: {p.title}\n"
-            f"Description: {p.description}\n"
+            f"Description: {p.description[:300]}...\n"
             f"Technologies: {p.technologies}"
             for p in projects
         ])
