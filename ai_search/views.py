@@ -6,6 +6,10 @@ from django.http import JsonResponse
 from django.shortcuts import render
 from django.template.loader import render_to_string
 from projects.models import Project
+import logging
+import traceback # Import traceback
+
+logger = logging.getLogger(__name__)
 
 # --- Tech Name Mapping ---
 TECH_MAP = {
@@ -32,7 +36,7 @@ def chat_interaction(request):
     if request.method != 'POST':
         return JsonResponse({'error': 'Invalid request method'}, status=405)
 
-    try:
+    try: # Outer try-except to catch any unexpected error during initial processing
         data = json.loads(request.body)
         user_message = data.get('message', '').lower().strip()
         history = request.session.get('chat_history', [])
@@ -41,13 +45,6 @@ def chat_interaction(request):
         # --- Priority 1: Project-related queries ---
         if '프로젝트' in user_message or '포트폴리오' in user_message or '뭐했어' in user_message or '뭐 했어' in user_message:
             projects_query = Project.objects.filter(is_visible=True).order_by('-created_at')
-            
-            # Optional: re-introduce tech filtering if needed. For now, show all projects.
-            # detected_techs = list(set([TECH_MAP[key] for key in TECH_MAP if key in user_message]))
-            # if detected_techs:
-            #    tech_to_filter = detected_techs[0]
-            #    projects_query = projects_query.filter(technologies__iregex=fr'\b{tech_to_filter}\b')
-
             projects_to_display = projects_query[:4] # Display up to 4 projects
             
             if projects_to_display.exists():
@@ -58,10 +55,9 @@ def chat_interaction(request):
         
         # If ai_response is already set by project logic, skip OpenAI call
         if ai_response:
-            # --- Save history (for predefined responses) ---
-            simplified_ai_text = ai_response.get('content', '') # Use actual HTML or text
+            simplified_ai_text = ai_response.get('content', '') 
             history.append({'user': user_message, 'ai': simplified_ai_text})
-            request.session['chat_history'] = history[-4:] # Keep last 4 exchanges
+            request.session['chat_history'] = history[-4:] 
             return JsonResponse({'response': ai_response})
 
         # --- RAG: Retrieve Context from Database (if no specific rule matched) ---
@@ -76,17 +72,16 @@ def chat_interaction(request):
         # --- Initialize OpenAI Client ---
         api_key = os.environ.get("OPENAI_API_KEY")
         if not api_key:
+            logger.error("OPENAI_API_KEY is not set.")
             return JsonResponse({
                 'response': {'type': 'text', 'content': '관리자에게 문의하세요: OPENAI_API_KEY가 설정되지 않았습니다.'}
             })
         client = OpenAI(api_key=api_key)
 
         # --- Prepare messages for OpenAI API ---
-        # We create a simplified history for the prompt
         formatted_history = []
         for h in history:
             formatted_history.append({"role": "user", "content": h['user']})
-            # We assume the 'ai' part in history is simplified text
             formatted_history.append({"role": "assistant", "content": h['ai']})
 
         system_prompt = (
@@ -114,16 +109,22 @@ def chat_interaction(request):
             ai_response = {'type': 'html', 'content': markdown.markdown(ai_text_response)}
 
         except AuthenticationError:
+            logger.error("OpenAI AuthenticationError: Invalid API key.")
             ai_response = {'type': 'text', 'content': "OpenAI API 키가 유효하지 않습니다. 관리자에게 문의하세요."}
         except Exception as e:
+            logger.error(f"Error during OpenAI API call or markdown processing: {e}", exc_info=True)
             ai_response = {'type': 'text', 'content': f"OpenAI API 호출 중 오류가 발생했습니다: {str(e)}"}
         
         # --- Save history ---
-        history.append({'user': user_message, 'ai': ai_text_response}) # Save the raw text response for future context
-        request.session['chat_history'] = history[-4:] # Keep last 4 exchanges
+        history.append({'user': user_message, 'ai': ai_text_response}) 
+        request.session['chat_history'] = history[-4:] 
 
         return JsonResponse({'response': ai_response})
 
+    except json.JSONDecodeError as e:
+        logger.error(f"JSONDecodeError in chat_interaction: {e}", exc_info=True)
+        return JsonResponse({'error': 'Invalid JSON payload'}, status=400) # Bad Request
     except Exception as e:
-        return JsonResponse({'error': str(e)}, status=500)
+        logger.error(f"Unhandled exception in chat_interaction: {e}", exc_info=True)
+        return JsonResponse({'error': f'An unexpected error occurred: {str(e)}'}, status=500)
 
