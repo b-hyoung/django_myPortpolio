@@ -1,0 +1,118 @@
+{% extends "blog/base.html" %}
+
+{% block title %}Admin: Bulk Delete Notes{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <h1 class="mb-4">노트 관리</h1>
+
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert {% if message.tags %}alert-{{ message.tags }}{% endif %}" role="alert">
+                {{ message }}
+            </div>
+        {% endfor %}
+    {% endif %}
+
+    <form id="delete-form" method="post" action="{% url 'notes:admin_delete_all' %}">
+        {% csrf_token %}
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <span>총 {{ notes.count }}개의 노트</span>
+                <div>
+                    <button type="button" id="delete-selected-btn" class="btn btn-warning btn-sm" data-bs-toggle="modal" data-bs-target="#deleteConfirmModal" data-action="delete_selected">
+                        선택된 노트 삭제
+                    </button>
+                    <button type="button" id="delete-all-btn" class="btn btn-danger btn-sm" data-bs-toggle="modal" data-bs-target="#deleteConfirmModal" data-action="delete_all">
+                        모든 노트 삭제
+                    </button>
+                </div>
+            </div>
+            <div class="card-body">
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th scope="col" style="width: 5%;"><input type="checkbox" id="select-all-checkbox"></th>
+                            <th scope="col">제목</th>
+                            <th scope="col">내용 (미리보기)</th>
+                            <th scope="col">작성일</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for note in notes %}
+                        <tr>
+                            <td><input type="checkbox" name="note_ids" value="{{ note.id }}" class="note-checkbox"></td>
+                            <td>{{ note.title }}</td>
+                            <td>{{ note.content|truncatechars:50 }}</td>
+                            <td>{{ note.created_at|date:"Y-m-d" }}</td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="4" class="text-center">노트가 없습니다.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <input type="hidden" name="action" id="form-action-input">
+    </form>
+</div>
+
+<!-- Modal -->
+<div class="modal fade" id="deleteConfirmModal" tabindex="-1" aria-labelledby="deleteConfirmModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="deleteConfirmModalLabel">삭제 확인</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body" id="modal-body-content">
+                ...
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">취소</button>
+                <button type="button" id="confirm-delete-btn" class="btn btn-danger">삭제</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const selectAllCheckbox = document.getElementById('select-all-checkbox');
+    const noteCheckboxes = document.querySelectorAll('.note-checkbox');
+    const deleteForm = document.getElementById('delete-form');
+    const confirmDeleteBtn = document.getElementById('confirm-delete-btn');
+    const modalBody = document.getElementById('modal-body-content');
+    const deleteConfirmModal = new bootstrap.Modal(document.getElementById('deleteConfirmModal'));
+    let action = '';
+
+    document.getElementById('delete-selected-btn').addEventListener('click', function() {
+        action = 'delete_selected';
+        modalBody.textContent = '선택된 노트를 정말로 삭제하시겠습니까?';
+    });
+
+    document.getElementById('delete-all-btn').addEventListener('click', function() {
+        action = 'delete_all';
+        modalBody.textContent = '모든 노트를 정말로 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.';
+    });
+
+    selectAllCheckbox.addEventListener('change', function() {
+        noteCheckboxes.forEach(checkbox => {
+            checkbox.checked = this.checked;
+        });
+    });
+
+    confirmDeleteBtn.addEventListener('click', function() {
+        const actionInput = document.createElement('input');
+        actionInput.type = 'hidden';
+        actionInput.name = action;
+        deleteForm.appendChild(actionInput);
+        deleteForm.submit();
+    });
+});
+</script>
+{% endblock %}

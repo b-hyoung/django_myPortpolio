@@ -10,4 +10,5 @@ urlpatterns = [
     path('api/notes/<int:note_id>/', views.note_content_api, name='note_content_api'),
 
     path('new/', views.create_note, name='create_note'),
+    path('admin/delete-all/', views.admin_delete_all_notes, name='admin_delete_all'),
 ]

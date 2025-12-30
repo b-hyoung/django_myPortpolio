@@ -85,6 +85,9 @@ def create_note(request):
     return render(request, 'notes/create_note.html', {'form': form})
 
 
+from django.contrib.auth.decorators import user_passes_test
+from django.contrib import messages
+
 def note_content_api(request, note_id):
     note = get_object_or_404(Note, pk=note_id)
     data = {
@@ -94,3 +97,33 @@ def note_content_api(request, note_id):
         # Add other fields as needed
     }
     return JsonResponse(data)
+
+@user_passes_test(lambda u: u.is_superuser)
+def admin_delete_all_notes(request):
+    if request.method == 'POST':
+        if 'delete_all' in request.POST:
+            try:
+                Note.objects.all().delete()
+                messages.success(request, '모든 노트가 성공적으로 삭제되었습니다.')
+            except Exception as e:
+                messages.error(request, f'노트 삭제 중 오류가 발생했습니다: {e}')
+            return redirect('notes:admin_delete_all')
+
+        elif 'delete_selected' in request.POST:
+            note_ids = request.POST.getlist('note_ids')
+            if not note_ids:
+                messages.error(request, '삭제할 노트를 선택해주세요.')
+                return redirect('notes:admin_delete_all')
+            try:
+                Note.objects.filter(id__in=note_ids).delete()
+                messages.success(request, f'{len(note_ids)}개의 노트가 성공적으로 삭제되었습니다.')
+            except Exception as e:
+                messages.error(request, f'노트 삭제 중 오류가 발생했습니다: {e}')
+            return redirect('notes:admin_delete_all')
+            
+        else:
+            messages.error(request, '잘못된 요청입니다.')
+            return redirect('notes:admin_delete_all')
+
+    notes = Note.objects.all().order_by('-created_at')
+    return render(request, 'notes/admin_delete_all.html', {'notes': notes})
