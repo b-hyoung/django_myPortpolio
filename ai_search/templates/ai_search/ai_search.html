@@ -157,6 +157,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const CHAT_HISTORY_KEY = 'aiChatHistory';
     const chatForm = document.getElementById('chat-form');
     const userInput = document.getElementById('user-input');
+    const submitButton = document.getElementById('submit-button');
     const chatHistory = document.getElementById('chat-history');
     const clearChatBtn = document.getElementById('clear-chat-btn');
 
@@ -193,7 +194,6 @@ document.addEventListener('DOMContentLoaded', function() {
         .then(data => {
             removeTypingIndicator();
 
-            // Always remove old suggestions before processing new response
             const suggestionsContainer = chatHistory.querySelector('.suggestions-container');
             if(suggestionsContainer) suggestionsContainer.remove();
 
@@ -207,7 +207,6 @@ document.addEventListener('DOMContentLoaded', function() {
                     appendMessage(data.response.content, 'ai');
                 }
 
-                // After handling content, check for and display new suggestions
                 if (data.response.suggestions && data.response.suggestions.length > 0) {
                     showSuggestions(data.response.suggestions);
                 }
@@ -217,6 +216,12 @@ document.addEventListener('DOMContentLoaded', function() {
             removeTypingIndicator();
             console.error('Error:', error);
             appendMessage('죄송합니다, 오류가 발생했습니다. 다시 시도해 주세요.', 'ai');
+        })
+        .finally(() => {
+            // Re-enable input fields after request is complete
+            userInput.disabled = false;
+            submitButton.disabled = false;
+            userInput.focus();
         });
     }
 
@@ -245,7 +250,12 @@ document.addEventListener('DOMContentLoaded', function() {
         if(container) container.remove();
         
         appendMessage(message, 'user');
+        
+        // Disable inputs and show loader
+        userInput.disabled = true;
+        submitButton.disabled = true;
         showTypingIndicator();
+        
         fetchBackend(message);
     }
 
@@ -278,10 +288,26 @@ document.addEventListener('DOMContentLoaded', function() {
     // --- Typing Indicator ---
 
     function showTypingIndicator() {
+        const loadingMessages = [
+            "로봇이 데이터를 가져오는 중...",
+            "지민이가 릴스 보는 중...",
+            "서버와 열심히 통신하는 중...",
+            "최적의 답변을 생성하는 중...",
+            "잠시만 기다려주세요..."
+        ];
+        const randomMessage = loadingMessages[Math.floor(Math.random() * loadingMessages.length)];
+
         const typingDiv = document.createElement('div');
         typingDiv.id = 'typing-indicator';
         typingDiv.classList.add('message', 'ai');
-        typingDiv.innerHTML = '<div class="spinner-border text-light" role="status"><span class="visually-hidden">Loading...</span></div>';
+        typingDiv.innerHTML = `
+            <div class="d-flex align-items-center">
+                <div class="spinner-border text-light me-2" role="status" style="width: 1.2rem; height: 1.2rem;">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+                <span>${randomMessage}</span>
+            </div>
+        `;
         chatHistory.appendChild(typingDiv);
         scrollToBottom();
     }
@@ -322,12 +348,18 @@ document.addEventListener('DOMContentLoaded', function() {
         e.preventDefault();
         const userMessage = userInput.value.trim();
         if (!userMessage) return;
+        
         const suggestionsContainer = chatHistory.querySelector('.suggestions-container');
         if(suggestionsContainer) suggestionsContainer.remove();
 
         appendMessage(userMessage, 'user');
         userInput.value = '';
+
+        // Disable inputs and show loader
+        userInput.disabled = true;
+        submitButton.disabled = true;
         showTypingIndicator();
+
         fetchBackend(userMessage);
     });
     
