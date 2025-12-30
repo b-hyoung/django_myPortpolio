@@ -62,14 +62,9 @@ def chat_interaction(request):
             return JsonResponse({'response': ai_response})
 
         # --- RAG: Retrieve Context from Database (if no specific rule matched) ---
-        # Limit context to the 5 most recent projects to avoid exceeding token limits
-        projects = Project.objects.filter(is_visible=True).order_by('-created_at')[:5]
-        project_context = "\n\n".join([
-            f"Project Title: {p.title}\n"
-            f"Description: {p.description[:300]}...\n"
-            f"Technologies: {p.technologies}"
-            for p in projects
-        ])
+        # TEMPORARY TEST: Force a very short context to check if code changes are being deployed.
+        project_context = "This is a temporary deployment test."
+
 
         # --- Initialize OpenAI Client ---
         api_key = os.environ.get("OPENAI_API_KEY")
