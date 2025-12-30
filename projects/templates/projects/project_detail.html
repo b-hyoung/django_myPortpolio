@@ -58,9 +58,9 @@
         <!-- Right Column: Sticky Info -->
         <div class="col-lg-4">
             <div class="card hero" style="position: sticky; top: 100px;">
-                {% if project.image %}
+                {% if project.image_data %}
                 <div class="card-body text-center">
-                    <img src="{{ project.image.url }}" class="img-fluid rounded shadow-sm mb-4" alt="{{ project.title }}" style="border: 1px solid var(--bs-border-color);">
+                    <img src="{{ project.image_data }}" class="img-fluid rounded shadow-sm mb-4" alt="{{ project.title }}" style="border: 1px solid var(--bs-border-color);">
                 
                     <p class="text-body-secondary small mb-3">
                         Created on: {{ project.created_at|date:"F j, Y" }}
@@ -78,6 +78,10 @@
                         </a>
                         {% endif %}
                     </div>
+                </div>
+                {% else %}
+                <div class="card-body text-center text-body-secondary">
+                    <p>No image provided.</p>
                 </div>
                 {% endif %}
             </div>

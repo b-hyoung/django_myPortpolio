@@ -61,6 +61,10 @@ def get_tech_icon(technology_name):
         'c++': 'devicon-cplusplus-plain',
         'go': 'devicon-go-plain',
         'java': 'devicon-java-plain',
+        'javafx': 'devicon-java-plain', # Using Java icon as proxy for JavaFX
+        'socket': 'devicon-apachekafka-original', # Using Kafka as proxy for socket/streaming
+        'ollama': 'devicon-google-plain', # Using Google as proxy for AI
+        'llama3.1': 'devicon-google-plain', # Using Google as proxy for AI
         'kotlin': 'devicon-kotlin-plain',
         'php': 'devicon-php-plain',
         'ruby': 'devicon-ruby-plain',
@@ -73,6 +77,8 @@ def get_tech_icon(technology_name):
         'digitalocean': 'devicon-digitalocean-plain',
         'kubernetes': 'devicon-kubernetes-plain',
         'jenkins': 'devicon-jenkins-plain',
+        'nextjs': 'devicon-nextjs-plain',
+        'tailwindcss': 'devicon-tailwindcss-plain',
         'tailwind': 'devicon-tailwindcss-plain',
         'sass': 'devicon-sass-original',
         'less': 'devicon-less-plain-wordmark',

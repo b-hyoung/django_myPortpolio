@@ -4,7 +4,7 @@ class Project(models.Model):
     title = models.CharField(max_length=100)
     description = models.TextField()
     technologies = models.CharField(max_length=200)
-    image = models.ImageField(upload_to='project_images/')
+    image_data = models.TextField(blank=True, null=True, verbose_name='이미지 데이터 (Base64)')
     live_link = models.URLField(blank=True, null=True)
     source_link = models.URLField(blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
