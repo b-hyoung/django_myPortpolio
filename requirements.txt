@@ -8,3 +8,4 @@ django-taggit
 openai
 gunicorn
 psycopg2-binary
+markdown
