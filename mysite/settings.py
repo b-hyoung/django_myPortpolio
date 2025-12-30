@@ -43,8 +43,10 @@ INSTALLED_APPS = [
     'projects',
     'crispy_forms',
     'crispy_bootstrap5',
-    'taggit',
+    'taggit', # Added for django-taggit
 ]
+
+
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',

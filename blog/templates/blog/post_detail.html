@@ -1,4 +1,5 @@
 {% extends "blog/base.html" %}
+{% load blog_tags %}
 
 {% block title %}{{ post.title }} - Blog{% endblock %}
 
@@ -10,7 +11,9 @@
             <i class="bi bi-clock"></i> 작성일: {{ post.created_at|date:"Y-m-d H:i" }}
         </p>
         
-        <div class="mb-4" style="white-space: pre-wrap;">{{ post.content|linebreaksbr }}</div>
+        <div class="mb-4 post-content"> {# 마크다운 적용 #}
+            {{ post.content|markdownify|safe }} {# 마크다운 적용 후 HTML 안전하게 렌더링 #}
+        </div>
 
         <a href="{% url 'post_list' %}" class="btn btn-outline-secondary">
             <i class="bi bi-list-ul"></i> 목록으로 돌아가기
