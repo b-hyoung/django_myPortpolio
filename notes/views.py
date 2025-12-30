@@ -88,6 +88,9 @@ def create_note(request):
 from django.contrib.auth.decorators import user_passes_test
 from django.contrib import messages
 
+from django.contrib.auth.decorators import user_passes_test
+from django.contrib import messages
+
 def note_content_api(request, note_id):
     note = get_object_or_404(Note, pk=note_id)
     data = {
