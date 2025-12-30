@@ -1,43 +1,85 @@
 {% extends "blog/base.html" %}
 {% load static %}
+{% load blog_tags %}
 
-{% block title %}{{ project.title }} - Projects{% endblock %}
+{% block title %}{{ project.title }} - Project Details{% endblock %}
+
+{% block hero_section %}{% endblock %}
 
 {% block content %}
-<div class="row">
-    <div class="col-lg-12">
-        <div class="card p-4">
-            {% if project.image %}
-            <img src="{{ project.image.url }}" class="img-fluid rounded mb-4" alt="{{ project.title }}">
-            {% endif %}
-            
-            <h1 class="h2 text-info mb-3">{{ project.title }}</h1>
-            
-            <div class="mb-4">
-                <p class="text-body-secondary">{{ project.description }}</p>
-            </div>
+<div class="container-fluid mt-4">
+    <!-- Project Header -->
+    <div class="text-center mb-4">
+        <h1 class="display-5 fw-bold">{{ project.title }}</h1>
+        <p class="text-body-secondary fs-5">A detailed breakdown of the project.</p>
+        <a href="{% url 'project_list' %}" class="btn btn-sm btn-outline-info">
+            <i class="bi bi-arrow-left"></i> Back to All Projects
+        </a>
+    </div>
 
-            <div class="mb-4">
-                <h5 class="mb-3">Technologies Used</h5>
-                {% for tech in project.technologies.split %}
-                    <span class="badge" style="background-color: var(--laser-color-1); color: #000;">{{ tech }}</span>
-                {% endfor %}
-            </div>
+    <div class="row g-4">
+        <!-- Left Column: Main Content Flow -->
+        <div class="col-lg-8">
+            <div class="card hero">
+                <div class="card-body">
+                    <!-- About Section -->
+                    <div class="mb-5">
+                        <h4 class="mb-3 border-bottom pb-2"><i class="bi bi-card-text"></i> About this Project</h4>
+                        <p class="text-body-secondary" style="line-height: 1.8;">
+                            {{ project.description|linebreaks }}
+                        </p>
+                    </div>
 
-            <div class="d-flex gap-2">
-                {% if project.live_link %}
-                <a href="{{ project.live_link }}" class="btn btn-primary" target="_blank">
-                    <i class="bi bi-box-arrow-up-right"></i> Live Demo
-                </a>
+                    <!-- Technical Stack Section -->
+                    <div class="mb-5">
+                        <h4 class="mb-4 border-bottom pb-2"><i class="bi bi-stack"></i> Technical Stack</h4>
+                        <div class="d-flex flex-wrap align-items-center gap-4">
+                            {% for tech in project.technologies.split %}
+                                <div class="text-center">
+                                    {% get_tech_icon tech %}
+                                    <div class="small mt-1">{{ tech.strip }}</div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+
+                    <!-- Gallery Section -->
+                    <div>
+                        <h4 class="mb-3 border-bottom pb-2"><i class="bi bi-images"></i> Gallery</h4>
+                        <div class="text-center text-body-secondary p-4 border rounded">
+                            <i class="bi bi-camera" style="font-size: 3rem;"></i>
+                            <p class="mt-2">Additional screenshots and videos will be displayed here.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Column: Sticky Info -->
+        <div class="col-lg-4">
+            <div class="card hero" style="position: sticky; top: 100px;">
+                {% if project.image %}
+                <div class="card-body text-center">
+                    <img src="{{ project.image.url }}" class="img-fluid rounded shadow-sm mb-4" alt="{{ project.title }}" style="border: 1px solid var(--bs-border-color);">
+                
+                    <p class="text-body-secondary small mb-3">
+                        Created on: {{ project.created_at|date:"F j, Y" }}
+                    </p>
+
+                     <div class="d-grid gap-2">
+                        {% if project.live_link %}
+                        <a href="{{ project.live_link }}" class="btn btn-lg btn-primary" target="_blank">
+                            <i class="bi bi-box-arrow-up-right"></i> Live Demo
+                        </a>
+                        {% endif %}
+                        {% if project.source_link %}
+                        <a href="{{ project.source_link }}" class="btn btn-lg btn-outline-success" target="_blank">
+                            <i class="bi bi-github"></i> Source Code
+                        </a>
+                        {% endif %}
+                    </div>
+                </div>
                 {% endif %}
-                {% if project.source_link %}
-                <a href="{{ project.source_link }}" class="btn btn-outline-secondary" target="_blank">
-                    <i class="bi bi-github"></i> Source Code
-                </a>
-                {% endif %}
-                <a href="{% url 'project_list' %}" class="btn btn-outline-info ms-auto">
-                    Back to Projects
-                </a>
             </div>
         </div>
     </div>
