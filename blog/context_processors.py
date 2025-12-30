@@ -10,9 +10,11 @@ def sidebar_projects(request):
     skill_color_map = {
         'Python': 'teal', 'Java': 'teal', 'JavaScript': 'teal',
         'NextJs': 'purple', 'Spring Boot': 'purple', 'React': 'purple', 'Django': 'purple',
-        'Docker': 'teal', 'Git & GitHub': 'teal', 'PostgreSQL': 'teal', 'AWS': 'teal',
+        'Docker': 'teal', 'Git & GitHub': 'teal', 'PostgreSQL': 'teal', 'AWS': 'teal', 'aws': 'teal',
         'MySQL': 'purple', 'MongoDB': 'purple',
         'Docker Compose': 'teal', 'Kubernetes': 'teal',
+        'Socket': 'purple', 'Ollama(llama3.1)': 'purple',
+        'TailwindCss': 'purple', 'TainwindCss': 'purple', # Handle potential typo
     }
 
     projects = Project.objects.filter(is_visible=True).order_by('-created_at')[:4]

@@ -11,8 +11,8 @@
     <div class="card mb-3" style="height: 120px;">
         <div class="row g-0 h-100">
             <div class="col-md-3 h-100"> {# Image column width reduced for smaller overall height #}
-                {% if project.image %}
-                    <img src="{{ project.image.url }}" class="img-fluid rounded-start h-100" alt="{{ project.title }}" style="object-fit: cover;">
+                {% if project.image_data %}
+                    <img src="{{ project.image_data }}" class="img-fluid rounded-start h-100" alt="{{ project.title }}" style="object-fit: cover;">
                 {% else %}
                     <div class="bg-secondary w-100 h-100 rounded-start d-flex align-items-center justify-content-center">
                         <span class="text-white small">No Image</span>
