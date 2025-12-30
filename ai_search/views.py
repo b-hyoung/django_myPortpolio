@@ -55,9 +55,10 @@ def chat_interaction(request):
         
         # If ai_response is already set by project logic, skip OpenAI call
         if ai_response:
-            simplified_ai_text = ai_response.get('content', '') 
-            history.append({'user': user_message, 'ai': simplified_ai_text})
-            request.session['chat_history'] = history[-4:] 
+            # For predefined responses, save a simplified text to history, NOT the raw HTML
+            history_ai_content = "프로젝트 목록을 표시했습니다." if ai_response.get('type') == 'html' else ai_response.get('content', '')
+            history.append({'user': user_message, 'ai': history_ai_content})
+            request.session['chat_history'] = history[-4:] # Keep last 4 exchanges
             return JsonResponse({'response': ai_response})
 
         # --- RAG: Retrieve Context from Database (if no specific rule matched) ---
