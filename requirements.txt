@@ -2,7 +2,7 @@ django
 dj-database-url
 python-dotenv
 whitenoise
-crispy-forms
+django-crispy-forms
 crispy-bootstrap5
 django-taggit
 openai
