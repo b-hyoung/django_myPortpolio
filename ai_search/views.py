@@ -19,8 +19,16 @@ TECH_MAP = {
     '도커': 'docker', 'docker': 'docker',
     '자바스크립트': 'javascript', 'javascript': 'javascript',
     '자바': 'java', 'java': 'java',
-    'mysql': 'mysql',
-    'postgresql': 'postgresql',
+    'mysql': 'mysql', 'sql': 'mysql', '마이에스큐엘': 'mysql',
+    'postgresql': 'postgresql', '포스트그레스큐엘': 'postgresql',
+    'aws': 'aws', '아마존 웹 서비스': 'aws',
+    '넥스트js': 'nextjs', 'nextjs': 'nextjs', 'next.js': 'nextjs',
+    '파이어베이스': 'firebase', 'firebase': 'firebase',
+    '테일윈드css': 'tailwindcss', 'tailwindcss': 'tailwindcss', 'tailwind': 'tailwindcss',
+    '소켓': 'socket', 'socket': 'socket',
+    '올라마': 'ollama', 'ollama': 'ollama', 'llama3.1': 'ollama', 'llama': 'ollama',
+    '스프링 부트': 'spring boot', 'spring boot': 'spring boot',
+    '깃': 'git', 'git': 'git', 'github': 'git', '깃허브': 'git',
 }
 
 def ai_search_view(request):
@@ -45,6 +53,13 @@ def chat_interaction(request):
         # --- Priority 1: Project-related queries ---
         if '프로젝트' in user_message or '포트폴리오' in user_message or '뭐했어' in user_message or '뭐 했어' in user_message:
             projects_query = Project.objects.filter(is_visible=True).order_by('-created_at')
+            
+            # Re-introduce tech filtering
+            detected_techs = list(set([TECH_MAP[key] for key in TECH_MAP if key in user_message if key in TECH_MAP]))
+            if detected_techs:
+                tech_to_filter = detected_techs[0]
+                projects_query = projects_query.filter(technologies__iregex=fr'\b{tech_to_filter}\b')
+
             projects_to_display = projects_query[:4] # Display up to 4 projects
             
             if projects_to_display.exists():
