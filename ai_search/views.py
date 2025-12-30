@@ -61,7 +61,8 @@ def chat_interaction(request):
             return JsonResponse({'response': ai_response})
 
         # --- RAG: Retrieve Context from Database (if no specific rule matched) ---
-        projects = Project.objects.filter(is_visible=True)
+        # Limit context to the 5 most recent projects to avoid exceeding token limits
+        projects = Project.objects.filter(is_visible=True).order_by('-created_at')[:5]
         project_context = "\n\n".join([
             f"Project Title: {p.title}\n"
             f"Description: {p.description}\n"
@@ -107,6 +108,10 @@ def chat_interaction(request):
             )
             ai_text_response = completion.choices[0].message.content
             ai_response = {'type': 'html', 'content': markdown.markdown(ai_text_response)}
+            
+            # --- Save history only on successful response ---
+            history.append({'user': user_message, 'ai': ai_text_response}) 
+            request.session['chat_history'] = history[-4:] 
 
         except AuthenticationError:
             logger.error("OpenAI AuthenticationError: Invalid API key.")
@@ -115,10 +120,6 @@ def chat_interaction(request):
             logger.error(f"Error during OpenAI API call or markdown processing: {e}", exc_info=True)
             ai_response = {'type': 'text', 'content': f"OpenAI API 호출 중 오류가 발생했습니다: {str(e)}"}
         
-        # --- Save history ---
-        history.append({'user': user_message, 'ai': ai_text_response}) 
-        request.session['chat_history'] = history[-4:] 
-
         return JsonResponse({'response': ai_response})
 
     except json.JSONDecodeError as e:
