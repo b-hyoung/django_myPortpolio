@@ -25,7 +25,8 @@ urlpatterns = [
     path("projects/", include("projects.urls")),
     path("pages/", include("pages.urls")),
     path("", include("blog.urls")),
-    path('markdownx/', include('markdownx.urls')), # markdownx URLs
+    path("ai/", include(("ai_search.urls", "ai_search"), namespace="ai_search")),
+    # path('markdownx/', include('markdownx.urls')), # markdownx URLs
 ]
 
 if settings.DEBUG:

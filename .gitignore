@@ -30,3 +30,10 @@ Thumbs.db
 media/ # User-uploaded files will go here
 static/ # Collected static files go here (if not source static)
 my_project/ # A common naming convention if user creates a separate sub-project for deployment. Not applicable here.
+
+staticfiles/
+*.log
+__pycache__/
+*.pyc
+.env
+db.sqlite3
