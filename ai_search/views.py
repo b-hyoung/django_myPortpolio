@@ -6,7 +6,7 @@ from django.http import JsonResponse
 from django.shortcuts import render
 from django.template.loader import render_to_string
 from projects.models import Project
-from ratelimit.decorators import ratelimit
+from ratelimit.decorators import rate_limited
 import logging
 import traceback # Import traceback
 
