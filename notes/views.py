@@ -54,19 +54,36 @@ def note_detail(request, note_id):
     }
     return render(request, 'notes/note_detail.html', {'note': note})
 
+def get_client_ip(request):
+    x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
+    if x_forwarded_for:
+        ip = x_forwarded_for.split(',')[0]
+    else:
+        ip = request.META.get('REMOTE_ADDR')
+    return ip
+
 def create_note(request):
     if request.method == 'POST':
+        ip_address = get_client_ip(request)
+        note_count = Note.objects.filter(ip_address=ip_address).count()
+
+        if note_count >= 3:
+            return JsonResponse({'status': 'error', 'message': 'IP당 3개의 노트만 생성할 수 있습니다.'}, status=403)
+
         form = NoteForm(request.POST)
         if form.is_valid():
             note = form.save(commit=False)
-            # You might want to assign an author here if you have user authentication
-            # note.author = request.user
+            note.ip_address = ip_address
             note.save()
             form.save_m2m() # Save ManyToMany relations for tags
             return JsonResponse({'status': 'success', 'message': '노트가 성공적으로 저장되었습니다.'})
         else:
             return JsonResponse({'status': 'error', 'errors': form.errors}, status=400)
-    return JsonResponse({'status': 'error', 'message': '잘못된 요청입니다.'}, status=405)
+    
+    # GET request: Render the create note page
+    form = NoteForm()
+    return render(request, 'notes/create_note.html', {'form': form})
+
 
 def note_content_api(request, note_id):
     note = get_object_or_404(Note, pk=note_id)
