@@ -6,7 +6,7 @@ from django.http import JsonResponse
 from django.shortcuts import render
 from django.template.loader import render_to_string
 from projects.models import Project
-from ratelimit import limits
+from django_ratelimit.decorators import ratelimit
 import logging
 import traceback # Import traceback
 
@@ -39,7 +39,7 @@ def ai_search_view(request):
     """
     return render(request, 'ai_search/ai_search.html', {'hide_layout_elements': True})
 
-@limits(key='ip', rate='10/m', block=True)
+@ratelimit(key='ip', rate='10/m', block=True)
 def chat_interaction(request):
     """
     Handles conversational AJAX requests using an OpenAI RAG pattern.

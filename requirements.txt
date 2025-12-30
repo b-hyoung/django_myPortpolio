@@ -11,4 +11,3 @@ psycopg2-binary
 markdown
 Pillow
 django-ratelimit
-ratelimit==2.2.1
