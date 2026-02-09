@@ -84,16 +84,12 @@ def chat_interaction(request):
         project_context = "This is a temporary deployment test."
 
 
-        # --- Initialize OpenAI Client ---
-        api_key = os.environ.get("OPENAI_API_KEY")
-        if not api_key:
-            logger.error("OPENAI_API_KEY is not set.")
-            return JsonResponse({
-                'response': {'type': 'text', 'content': '관리자에게 문의하세요: OPENAI_API_KEY가 설정되지 않았습니다.'}
-            })
-        client = OpenAI(api_key=api_key)
+        # --- Dynamic AI Service Selection ---
+        # 환경 변수 'AI_SERVICE_PROVIDER' 값에 따라 사용할 AI 서비스를 선택합니다.
+        # 'openai' 또는 'local'을 값으로 가집니다. 기본값은 'openai' 입니다.
+        ai_provider = os.environ.get("AI_SERVICE_PROVIDER", "openai").lower()
 
-        # --- Prepare messages for OpenAI API ---
+        # --- Prepare messages for AI API (Common for both services) ---
         formatted_history = []
         for h in history:
             formatted_history.append({"role": "user", "content": h['user']})
@@ -113,26 +109,58 @@ def chat_interaction(request):
         messages.extend(formatted_history)
         messages.append({"role": "user", "content": user_message})
 
-        # --- Call OpenAI API ---
+        # --- Call AI Service based on provider ---
         try:
-            completion = client.chat.completions.create(
-                model="gpt-3.5-turbo",
-                messages=messages,
-                temperature=0.7,
-            )
+            if ai_provider == 'local':
+                # --- Use Local AI (Ollama) ---
+                ollama_base_url = os.environ.get("OLLAMA_BASE_URL", "http://localhost:11434/v1")
+                # 사용자가 지정한 모델 'llama3:instruct'를 기본값으로 설정합니다.
+                ollama_model_name = os.environ.get("OLLAMA_MODEL_NAME", "llama3:instruct")
+
+                client = OpenAI(
+                    base_url=ollama_base_url,
+                    api_key='ollama', # Ollama는 api_key가 필요 없습니다.
+                )
+                
+                logger.info(f"Connecting to Local AI: {ollama_base_url} with model {ollama_model_name}")
+                
+                completion = client.chat.completions.create(
+                    model=ollama_model_name,
+                    messages=messages,
+                    temperature=0.7,
+                )
+            else: # Default to OpenAI
+                # --- Use OpenAI ---
+                api_key = os.environ.get("OPENAI_API_KEY")
+                if not api_key:
+                    logger.error("OPENAI_API_KEY is not set for the 'openai' provider.")
+                    return JsonResponse({
+                        'response': {'type': 'text', 'content': '관리자에게 문의하세요: OPENAI_API_KEY가 설정되지 않았습니다.'}
+                    })
+                
+                client = OpenAI(api_key=api_key)
+                
+                logger.info("Connecting to OpenAI API with model gpt-3.5-turbo")
+                
+                completion = client.chat.completions.create(
+                    model="gpt-3.5-turbo",
+                    messages=messages,
+                    temperature=0.7,
+                )
+
+            # --- Process and Save Response (Common for both services) ---
             ai_text_response = completion.choices[0].message.content
             ai_response = {'type': 'html', 'content': markdown.markdown(ai_text_response)}
             
-            # --- Save history only on successful response ---
             history.append({'user': user_message, 'ai': ai_text_response}) 
             request.session['chat_history'] = history[-4:] 
 
-        except AuthenticationError:
-            logger.error("OpenAI AuthenticationError: Invalid API key.")
-            ai_response = {'type': 'text', 'content': "OpenAI API 키가 유효하지 않습니다. 관리자에게 문의하세요."}
+        except AuthenticationError as e:
+            logger.error(f"AI Service AuthenticationError for provider '{ai_provider}': {e}")
+            ai_response = {'type': 'text', 'content': f"AI 서비스 인증 오류가 발생했습니다. ('{ai_provider}'). 관리자에게 문의하세요."}
         except Exception as e:
-            logger.error(f"Error during OpenAI API call or markdown processing: {e}", exc_info=True)
-            ai_response = {'type': 'text', 'content': f"OpenAI API 호출 중 오류가 발생했습니다: {str(e)}"}
+            logger.error(f"Error during AI call for provider '{ai_provider}': {e}", exc_info=True)
+            ai_response = {'type': 'text', 'content': f"AI 모델 호출 중 오류가 발생했습니다. ('{ai_provider}'). 서버 로그를 확인하세요."}
         
         return JsonResponse({'response': ai_response})
 
