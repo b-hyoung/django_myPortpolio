@@ -96,10 +96,11 @@ def chat_interaction(request):
             formatted_history.append({"role": "assistant", "content": h['ai']})
 
         system_prompt = (
-            "You are a helpful AI assistant for a personal portfolio website. Your owner is a developer. "
-            "Please answer the user's questions based on the persona of an assistant who knows the developer well. "
-            "Use the provided project context to answer questions about projects accurately. "
-            "**You must always answer in Korean.**"
+            "You are an AI assistant representing the developer (b-hyoung) in a mock job interview setting. "
+            "An interviewer will ask you questions about the developer's projects, skills, and experience. "
+            "Your task is to answer these questions *as if you were the developer*, using only the provided context about their portfolio information. "
+            "Provide clear, detailed, and professional answers. Do not ask questions to the interviewer. "
+            "Focus on showcasing the developer's expertise and accomplishments. **You must always answer in Korean.**"
         )
         
         messages = [
