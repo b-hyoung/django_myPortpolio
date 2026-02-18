@@ -114,7 +114,7 @@
         </li>
         {% url 'notes_index' as notes_url %}
         <li class="nav-item">
-          <a class="nav-link {% if request.path|startswith:notes_url %}active{% endif %}" href="{{ notes_url }}"><i class="bi bi-journal"></i> Notes</a>
+          <a class="nav-link {% if request.path|startswith:notes_url %}active{% endif %}" href="{{ notes_url }}"><i class="bi bi-journal"></i>Post it</a>
         </li>
         {% url 'pages:contact' as contact_url %}
         <li class="nav-item">
