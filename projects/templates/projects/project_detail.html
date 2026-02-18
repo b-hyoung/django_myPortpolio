@@ -1,4 +1,4 @@
-{% extends "blog/base.html" %}
+﻿{% extends "blog/base.html" %}
 {% load static %}
 {% load blog_tags %}
 
@@ -6,86 +6,161 @@
 
 {% block hero_section %}{% endblock %}
 
+{% block custom_css %}
+<style>
+  .meta-card, .kpi-card, .section-card {
+    background-color: rgba(20, 20, 20, 0.72);
+    border: 1px solid var(--bs-border-color);
+    border-radius: 14px;
+  }
+  .meta-label { font-size: 0.78rem; letter-spacing: .03em; color: var(--bs-body-secondary-color); text-transform: uppercase; }
+  .meta-value { font-size: 1rem; font-weight: 700; }
+  .kpi-value { font-size: 1.35rem; font-weight: 800; color: var(--laser-color-1); }
+  .stack-item { min-width: 150px; }
+  .section-title { font-weight: 700; }
+</style>
+{% endblock %}
+
 {% block content %}
-<div class="container-fluid mt-4">
-    <!-- Project Header -->
-    <div class="text-center mb-4">
-        <h1 class="display-5 fw-bold">{{ project.title }}</h1>
-        <p class="text-body-secondary fs-5">A detailed breakdown of the project.</p>
-        <a href="{% url 'project_list' %}" class="btn btn-sm btn-outline-info">
-            <i class="bi bi-arrow-left"></i> Back to All Projects
+<div class="container-fluid mt-4 mb-4">
+    <div class="d-flex flex-wrap justify-content-between align-items-start gap-3 mb-4">
+        <div>
+            <h1 class="display-6 fw-bold mb-2">{{ project.title }}</h1>
+            {% if project.live_link or project.source_link or profile.writeup_link %}
+                <div class="d-flex flex-wrap gap-2 mt-2">
+                    {% if project.live_link %}
+                        <a href="{{ project.live_link }}" class="btn btn-primary btn-sm" target="_blank">
+                            <i class="bi bi-box-arrow-up-right"></i> Live Demo
+                        </a>
+                    {% endif %}
+                    {% if profile.writeup_link %}
+                        <a href="{{ profile.writeup_link }}" class="btn btn-outline-info btn-sm" target="_blank">
+                            <i class="bi bi-journal-text"></i> 프로젝트 기록
+                        </a>
+                    {% endif %}
+                    {% if project.source_link %}
+                        <a href="{{ project.source_link }}" class="btn btn-outline-success btn-sm" target="_blank">
+                            <i class="bi bi-github"></i> Source Code
+                        </a>
+                    {% endif %}
+                </div>
+            {% endif %}
+        </div>
+        <a href="{% url 'project_list' %}" class="btn btn-outline-info btn-sm">
+            <i class="bi bi-arrow-left"></i> 프로젝트 목록으로 돌아가기
         </a>
     </div>
 
-    <div class="row g-4">
-        <!-- Left Column: Main Content Flow -->
-        <div class="col-lg-8">
-            <div class="card hero">
-                <div class="card-body">
-                    <!-- About Section -->
-                    <div class="mb-5">
-                        <h4 class="mb-3 border-bottom pb-2"><i class="bi bi-card-text"></i> About this Project</h4>
-                        <p class="text-body-secondary" style="line-height: 1.8;">
-                            {{ project.description|linebreaks }}
-                        </p>
-                    </div>
+    <div class="row g-3 mb-4">
+        <div class="col-6 col-lg-3">
+            <div class="meta-card p-3 h-100">
+                <div class="meta-label">기간</div>
+                <div class="meta-value">{{ profile.period }}</div>
+            </div>
+        </div>
+        <div class="col-6 col-lg-3">
+            <div class="meta-card p-3 h-100">
+                <div class="meta-label">역할</div>
+                <div class="meta-value">{{ profile.role }}</div>
+            </div>
+        </div>
+        <div class="col-6 col-lg-3">
+            <div class="meta-card p-3 h-100">
+                <div class="meta-label">기여도</div>
+                <div class="meta-value">{{ profile.contribution }}</div>
+            </div>
+        </div>
+        <div class="col-6 col-lg-3">
+            <div class="meta-card p-3 h-100">
+                <div class="meta-label">작성일</div>
+                <div class="meta-value">{{ project.created_at|date:"Y.m.d" }}</div>
+            </div>
+        </div>
+    </div>
 
-                    <!-- Technical Stack Section -->
-                    <div class="mb-5">
-                        <h4 class="mb-4 border-bottom pb-2"><i class="bi bi-stack"></i> Technical Stack</h4>
-                        <div class="d-flex flex-wrap align-items-center gap-4">
-                            {% for tech in project.technologies.split %}
-                                <div class="text-center">
-                                    {% get_tech_icon tech %}
-                                    <div class="small mt-1">{{ tech.strip }}</div>
+    <div class="row g-4">
+        <div class="{% if project.image_data %}col-lg-8{% else %}col-12{% endif %}">
+            <div class="section-card p-4 mb-4">
+                <h4 class="section-title mb-3"><i class="bi bi-diagram-3"></i> {{ profile.triple_title }}</h4>
+                <div class="row g-3">
+                    {% for section in profile.triple_sections %}
+                        <div class="col-md-4">
+                            <div class="meta-card p-3 h-100">
+                                <div class="meta-label mb-2">{{ section.label }}</div>
+                                <ul class="mb-0 text-body-secondary">
+                                    {% for item in section.points %}
+                                        <li class="mb-2">{{ item }}</li>
+                                    {% empty %}
+                                        <li>내용 추가 예정.</li>
+                                    {% endfor %}
+                                </ul>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <div class="section-card p-4 mb-4">
+                <h4 class="section-title mb-3"><i class="bi bi-person-workspace"></i> 나의 역할 / 담당 구현</h4>
+                <ul class="mb-0 text-body-secondary">
+                    {% for item in profile.my_role_points %}
+                        <li class="mb-2">{{ item }}</li>
+                    {% empty %}
+                        <li>담당 구현 내용 추가 예정.</li>
+                    {% endfor %}
+                </ul>
+            </div>
+
+            <div class="row g-4 mb-4">
+                <div class="col-lg-6">
+                    <div class="section-card p-4 h-100">
+                        <h4 class="section-title mb-3"><i class="bi bi-speedometer2"></i> {{ profile.kpi_title }}</h4>
+                        <div class="row g-3">
+                            {% for metric in profile.metrics %}
+                                <div class="col-12">
+                                    <div class="kpi-card p-3 h-100">
+                                        <div class="meta-label">{{ metric.label }}</div>
+                                        <div class="kpi-value">{{ metric.value }}</div>
+                                        <div class="small text-body-secondary">{{ metric.note }}</div>
+                                    </div>
+                                </div>
+                            {% empty %}
+                                <div class="col-12">
+                                    <p class="text-body-secondary mb-0">성과 지표를 추가 예정.</p>
                                 </div>
                             {% endfor %}
                         </div>
                     </div>
-
-                    <!-- Gallery Section -->
-                    <div>
-                        <h4 class="mb-3 border-bottom pb-2"><i class="bi bi-images"></i> Gallery</h4>
-                        <div class="text-center text-body-secondary p-4 border rounded">
-                            <i class="bi bi-camera" style="font-size: 3rem;"></i>
-                            <p class="mt-2">Additional screenshots and videos will be displayed here.</p>
+                </div>
+                <div class="col-lg-6">
+                    <div class="section-card p-4 h-100">
+                        <h4 class="section-title mb-3"><i class="bi bi-stack"></i> 기술 스택과 사용 목적</h4>
+                        <div class="d-flex flex-wrap gap-3">
+                            {% for item in stack_items %}
+                                <div class="meta-card p-3 stack-item">
+                                    <div class="d-flex align-items-center gap-2 mb-1">
+                                        {% get_tech_icon item.name %}
+                                        <strong>{{ item.name }}</strong>
+                                    </div>
+                                    <div class="small text-body-secondary">{{ item.purpose }}</div>
+                                </div>
+                            {% endfor %}
+                            {% if not stack_items %}
+                                <p class="text-body-secondary mb-0">기술 스택 정보를 추가 예정.</p>
+                            {% endif %}
                         </div>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- Right Column: Sticky Info -->
+        {% if project.image_data %}
         <div class="col-lg-4">
-            <div class="card hero" style="position: sticky; top: 100px;">
-                {% if project.image_data %}
-                <div class="card-body text-center">
-                    <img src="{{ project.image_data }}" class="img-fluid rounded shadow-sm mb-4" alt="{{ project.title }}" style="border: 1px solid var(--bs-border-color);">
-                
-                    <p class="text-body-secondary small mb-3">
-                        Created on: {{ project.created_at|date:"F j, Y" }}
-                    </p>
-
-                     <div class="d-grid gap-2">
-                        {% if project.live_link %}
-                        <a href="{{ project.live_link }}" class="btn btn-lg btn-primary" target="_blank">
-                            <i class="bi bi-box-arrow-up-right"></i> Live Demo
-                        </a>
-                        {% endif %}
-                        {% if project.source_link %}
-                        <a href="{{ project.source_link }}" class="btn btn-lg btn-outline-success" target="_blank">
-                            <i class="bi bi-github"></i> Source Code
-                        </a>
-                        {% endif %}
-                    </div>
-                </div>
-                {% else %}
-                <div class="card-body text-center text-body-secondary">
-                    <p>No image provided.</p>
-                </div>
-                {% endif %}
+            <div class="section-card p-3 mb-4" style="position: sticky; top: 100px;">
+                <img src="{{ project.image_data }}" class="img-fluid rounded shadow-sm mb-3" alt="{{ project.title }}" style="border: 1px solid var(--bs-border-color);">
             </div>
         </div>
+        {% endif %}
     </div>
 </div>
 {% endblock %}

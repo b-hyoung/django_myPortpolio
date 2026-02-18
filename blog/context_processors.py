@@ -1,8 +1,8 @@
-from .models import Post
 from projects.models import Project
+from .tistory import fetch_tistory_posts
 
 def recent_posts(request):
-    recent_posts = Post.objects.order_by('-created_at')[:5]
+    recent_posts = fetch_tistory_posts(limit=5)
     return {'recent_posts': recent_posts}
 
 def sidebar_projects(request):

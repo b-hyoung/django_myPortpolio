@@ -1,6 +1,7 @@
 from django import template
 from django.utils.html import mark_safe, format_html
 import markdown
+import re
 
 register = template.Library()
 
@@ -19,7 +20,11 @@ def get_tech_icon(technology_name):
     """
     Maps a technology name to a Devicon icon tag.
     """
-    tech_name_lower = technology_name.lower().strip()
+    raw_name = (technology_name or "").strip()
+    # Normalize common punctuation/format variants: "Python,", "Next.js", "AWS(EC2)"
+    normalized_name = re.sub(r'[,\s]+$', '', raw_name)
+    normalized_name = re.sub(r'\(.*?\)', '', normalized_name).strip()
+    tech_name_lower = normalized_name.lower()
     
     ICON_MAP = {
         'python': 'devicon-python-plain',
@@ -31,6 +36,7 @@ def get_tech_icon(technology_name):
         'css3': 'devicon-css3-plain',
         'bootstrap': 'devicon-bootstrap-plain',
         'react': 'devicon-react-original',
+        'zustand': 'devicon-redux-original',
         'vue': 'devicon-vuejs-plain',
         'angular': 'devicon-angularjs-plain',
         'typescript': 'devicon-typescript-plain',
@@ -70,7 +76,7 @@ def get_tech_icon(technology_name):
         'ruby': 'devicon-ruby-plain',
         'rust': 'devicon-rust-plain',
         'swift': 'devicon-swift-plain',
-        'aws': 'devicon-amazonwebservices-original',
+        'aws': 'devicon-amazonwebservices-plain-wordmark',
         'azure': 'devicon-azure-plain',
         'google cloud': 'devicon-googlecloud-plain',
         'heroku': 'devicon-heroku-plain',
@@ -78,8 +84,10 @@ def get_tech_icon(technology_name):
         'kubernetes': 'devicon-kubernetes-plain',
         'jenkins': 'devicon-jenkins-plain',
         'nextjs': 'devicon-nextjs-plain',
+        'next.js': 'devicon-nextjs-plain',
         'tailwindcss': 'devicon-tailwindcss-plain',
         'tailwind': 'devicon-tailwindcss-plain',
+        's3': 'devicon-amazonwebservices-plain-wordmark',
         'sass': 'devicon-sass-original',
         'less': 'devicon-less-plain-wordmark',
         'jest': 'devicon-jest-plain',
@@ -104,4 +112,38 @@ def get_tech_icon(technology_name):
     
     icon_class = ICON_MAP.get(tech_name_lower, 'devicon-gear-plain') # Default to a gear icon
     
-    return format_html('<i class="{0} colored" style="font-size: 1.5rem;" title="{1}"></i>', icon_class, technology_name)
+    return format_html('<i class="{0} colored" style="font-size: 1.5rem;" title="{1}"></i>', icon_class, raw_name)
+
+
+@register.filter
+def split_technologies(value):
+    """
+    Split technologies string by comma/newline and trim surrounding punctuation/spaces.
+    """
+    if not isinstance(value, str):
+        return []
+
+    normalized = value.replace('\r\n', '\n').replace('\n', ',')
+    parts = [p.strip() for p in normalized.split(',')]
+    cleaned = [re.sub(r'^[\s,]+|[\s,]+$', '', p) for p in parts if p.strip()]
+    return cleaned
+
+
+@register.filter
+def bullet_lines(value):
+    """
+    Convert multi-line text to clean bullet items.
+    """
+    if not isinstance(value, str):
+        return []
+
+    lines = [line.strip() for line in value.splitlines() if line.strip()]
+    cleaned = [re.sub(r'^\s*[-*•]\s*', '', line).strip() for line in lines]
+    return [line for line in cleaned if line]
+
+
+@register.filter
+def dict_get(mapping, key):
+    if isinstance(mapping, dict):
+        return mapping.get(key)
+    return None
